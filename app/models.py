@@ -23,6 +23,11 @@ association_table = db.Table('association', db.Model.metadata,
 )
 
 class Resource(db.Model):
+    '''
+    A shared resource that can be reserved by any register user.
+    resource and reservation have 1 to many relationship.
+    resource and owner have 1 to 1 relationship.
+    '''
     __tablename__ = "resource"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -30,7 +35,7 @@ class Resource(db.Model):
     # Integer value from 0 to 1440 in minutes for start_time and end_time
     available_start = db.Column(db.Integer)
     available_end = db.Column(db.Integer)
-    tags = db.relationship('Tags', secondary=association_table, backref='resource')
+    tags = db.relationship('Tag', secondary=association_table, backref='resource')
     reservations = db.relationship('Reservation', backref='resource',
                                 lazy='dynamic')
 
@@ -56,6 +61,11 @@ class Resource(db.Model):
 
 
 class Reservation(db.Model):
+    '''
+    A reservation defines a user's intension to use one resource at certain time.
+    reservation and resource have 1 to 1 relationship.
+    reservation and user have 1 to 1 relationship.
+    '''
     __tablename__ = "reservation"
     id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
@@ -88,16 +98,25 @@ class Reservation(db.Model):
         return self
 
 class Tag(db.Model):
+    '''
+    Tag of resources, could be 'room', 'car', 'satellite' etc.
+    tag and resources have many to many relationship.
+    '''
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
     # lower case letters less than or equals to 20 chars
     value = db.Column(db.String(20))
 
-    def __init__(value):
+    def __init__(self, value):
         self.value = value
 
 
 class User(db.Model):
+    '''
+    A regitered user. Can share resrouces and have reservations.
+    user and resource have 1 to many relationship.
+    user and reservation have 1 to many relationship.
+    '''
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100))
@@ -108,7 +127,7 @@ class User(db.Model):
     resources = db.relationship('Resource', backref='user',
                                 lazy='dynamic')
 
-    def __init__(email, passhash):
+    def __init__(self, email, passhash):
         self.email = email
         self.passhash = passhash
 
