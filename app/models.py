@@ -33,8 +33,8 @@ class Resource(db.Model):
     name = db.Column(db.String(100))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # Integer value from 0 to 1440 in minutes for start_time and end_time
-    available_start = db.Column(db.Integer)
-    available_end = db.Column(db.Integer)
+    available_start = db.Column(db.String(5))
+    available_end = db.Column(db.String(5))
     tags = db.relationship('Tag', secondary=association_table, backref='resource')
     reservations = db.relationship('Reservation', backref='resource',
                                 lazy='dynamic')
@@ -51,8 +51,8 @@ class Resource(db.Model):
         try:
             self.name = data['name']
             self.owner_id = int(data['owner_id'])
-            self.available_start = int(data['available_start'])
-            self.available_end = int(data['available_end'])
+            self.available_start = data['available_start']
+            self.available_end = data['available_end']
         except KeyError as e:
             raise KeyError('Invalid resource: missing ' + e.args[0])
         except TypeError as e:
@@ -133,6 +133,9 @@ class User(db.Model):
 
     def is_active(self):
         return True
+
+    def is_anonymous(self):
+        return False
 
     def get_id(self):
         return self.id

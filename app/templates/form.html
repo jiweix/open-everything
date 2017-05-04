@@ -28,13 +28,18 @@
   </div>
 
   <div class="form-group">
-    <label for="owner_id">Owner</label>
-    <input type="text" name="owner_id" id="owner_id" value="{{resource.owner_id}}" class="form-control"/>
+    <label for="available_start">Start</label>
+    <input type="text" name="available_start" id="available_start" value="{{resource.available_start}}" class="form-control"/>
   </div>
 
   <div class="form-group">
-    <label for="description">Description</label>
-    <textarea name="description" id="description" class="form-control">{{resource.description}}</textarea>
+    <label for="available_end">Start</label>
+    <input type="text" name="available_end" id="available_end" value="{{resource.available_end}}" class="form-control"/>
+  </div>
+
+  <div class="form-group">
+    <label for="tag">Tags (separate by space)</label>
+    <textarea name="tag" id="tag" class="form-control">{{tag}}</textarea>
   </div>
 
   <button type="submit" class="btn btn-success">Save</button>
