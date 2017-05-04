@@ -34,7 +34,11 @@
       <h4>{{resource.name}}</h4>
       <p>{{resource.available_start}}</p>
       <p>{{resource.available_end}}</p>
-      <p>{{resource.tags}}</p>
+      <p>{% for tag in resource.tags %}
+        {{tag.value}}
+
+      {% endfor %}</p>
+
     </div>
   </a>
 </div>

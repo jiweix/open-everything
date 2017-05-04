@@ -14,6 +14,7 @@
 # limitations under the License.
 ######################################################################
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -32,7 +33,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # Integer value from 0 to 1440 in minutes for start_time and end_time
+    # time should be hh:mm in 24 hour format
     available_start = db.Column(db.String(5))
     available_end = db.Column(db.String(5))
     tags = db.relationship('Tag', secondary=association_table, backref='resource')
@@ -71,8 +72,9 @@ class Reservation(db.Model):
     resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
     resource_name = db.Column(db.String(100))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # time should be integer as minutes
-    start_time = db.Column(db.Integer)
+    # duration should be calculate from these column
+    start_time = db.Column(db.Datetime)
+    end_time = db.Column(db.Datetime)
     duration = db.Column(db.Integer)
 
     def serialize(self):
@@ -81,6 +83,7 @@ class Reservation(db.Model):
                  "resource_name": self.resource_name,
                  "user_id": self.user_id,
                  "start_time": self.start_time,
+                 "end_time": self.end_time,
                  "duration": self.duration
                 }
 
@@ -89,13 +92,17 @@ class Reservation(db.Model):
             self.resource_id = int(data['resource_id'])
             self.resource_name = data['resource_name']
             self.user_id = int(data['user_id'])
-            self.start_time = int(data['start_time'])
-            self.duration = int(data['duration'])
+            self.start_time = data['start_time']
+            self.end_time = data['end_time']
+            self.duration = self.get_duration(data['start_time'], data['end_time'])
         except KeyError as e:
             raise KeyError('Invalid reservation: missing ' + e.args[0])
         except TypeError as e:
             raise TypeError('Invalid reservation: body of request contained bad or no data')
         return self
+
+    def get_duration(self, start, end):
+        return int((end - start).total_seconds() / 60.0)
 
 class Tag(db.Model):
     '''
@@ -104,7 +111,7 @@ class Tag(db.Model):
     '''
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
-    # lower case letters less than or equals to 20 chars
+    # lower case letters
     value = db.Column(db.String(20))
 
     def __init__(self, value):

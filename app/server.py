@@ -62,11 +62,14 @@ def logout():
     return redirect(url_for('.login'))
 # End of User management
 
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
+
 # Resource management, need to be updated
 @app.route('/resources', methods=['GET'])
 @login_required
 def list():
-    print current_user.id
     resources = [res for res in Resource.query.all()]
     return render_template(
         "list.html",
@@ -117,7 +120,7 @@ def edit_resources(id):
 def update_resources(id):
     resource = Resource.query.get_or_404(id)
     data = request.form.to_dict(flat=True)
-    data['owner_id'] = current_user().id
+    data['owner_id'] = current_user.id
     print data
     resource.deserialize(data)
     # update tags
