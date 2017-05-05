@@ -123,8 +123,6 @@ def get_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
 def edit_resources(id):
-    # TODO if a resrouce name is updated, all resource_name in reservation table should also
-    # be updated.
     resource = Resource.query.get_or_404(id)
     tag_str = ''
     for tag in resource.tags:
@@ -140,6 +138,8 @@ def update_resources(id):
     print data
     if resource is None or data['owner_id'] != resource.owner_id:
         return redirect(url_for('.list'))
+    # edit name is not allowed.
+    data['name'] = resource.name
     resource.deserialize(data)
     # update tags
     tag_list = data['tag'].split()
@@ -147,8 +147,10 @@ def update_resources(id):
         tag = Tag.query.filter_by(value=tag_name.lower()).first()
         if not tag:
             tag = Tag(tag_name.lower())
+            db.session.add(tag)
         if tag not in resource.tags:
             resource.tags.append(tag)
+    db.session.add(resource)
     db.session.commit()
     return redirect(url_for('.get_resources', id=resource.id))
 
