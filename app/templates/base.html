@@ -15,6 +15,7 @@
 
     <script type="text/javascript" src="/static/lib/site.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/lib/site.css" />
+
   </head>
   <body>
     <div class="navbar navbar-default">
@@ -23,7 +24,7 @@
           <div class="navbar-brand">JX-Share</div>
         </div>
         <ul class="nav navbar-nav">
-          <li><a href="/resources">Resources</a></li>
+          <li><a href="/resources">Home</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="/logout">Logout</a></li>
@@ -33,6 +34,12 @@
     <div class="container">
       {% block content %}{% endblock %}
     </div>
-    {{user}}
+    <div class="container" style="height:25px; width:100%; clear:both;">
+    </div>
+    <footer class="footer">
+      <div class="container text-center">
+        <p class="text-muted credit">&copy;2017 - JX-Share. All Rights Reserved.</p>
+      </div>
+    </footer>
   </body>
 </html>

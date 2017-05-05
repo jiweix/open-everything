@@ -19,30 +19,50 @@
 
 {% block content %}
 <h3>{{action}} resource</h3>
+<hr />
 
 <form method="POST" enctype="multipart/form-data">
+  <div class="form-horizontal">
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="name">Name</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="name" id="name" value="{{resource.name}}" class="form-control"/>
+      </div>
+    </div>
 
-  <div class="form-group">
-    <label for="name">Name</label>
-    <input type="text" name="name" id="name" value="{{resource.name}}" class="form-control"/>
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="available_start">Start</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="available_start" id="available_start" class="time" value="{{resource.available_start}}" class="form-control"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="available_end">End</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="available_end" id="available_end" class="time" value="{{resource.available_end}}" class="form-control"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="tag">Tags (separate by space)</label>
+      </div>
+      <div class="col-md-10">
+        <textarea name="tag" id="tag" class="form-control">{{tag}}</textarea>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-default">Save</button>
+    </div>
   </div>
-
-  <div class="form-group">
-    <label for="available_start">Start</label>
-    <input type="text" name="available_start" id="available_start" class="time" value="{{resource.available_start}}" class="form-control"/>
-  </div>
-
-  <div class="form-group">
-    <label for="available_end">End</label>
-    <input type="text" name="available_end" id="available_end" class="time" value="{{resource.available_end}}" class="form-control"/>
-  </div>
-
-  <div class="form-group">
-    <label for="tag">Tags (separate by space)</label>
-    <textarea name="tag" id="tag" class="form-control">{{tag}}</textarea>
-  </div>
-
-  <button type="submit" class="btn btn-success">Save</button>
 </form>
 <script>
     $(function() {
