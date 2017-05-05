@@ -3,21 +3,43 @@
 
 {% block content %}
 <h3>{{action}} Reservation</h3>
-
+{% if message != "" %}
+<div class="alert alert-danger" role="alert">
+  <strong>{{message}}</strong>
+</div>
+{% endif %}
 <form method="POST" enctype="multipart/form-data">
 
   <div class="form-group">
+    <label for="start">Date</label>
+    <input type="text" name="date" id="date" class="form-control"/>
+  </div>
+
+  <div class="form-group">
     <label for="start">Start</label>
-    <input type="datetime-local" name="start" id="start" class="form-control"/>
+    <input type="text" name="start" id="start" class="form-control time"/>
   </div>
 
   <div class="form-group">
     <label for="end">End</label>
-    <input type="datetime-local" name="end" id="end" class="form-control"/>
+    <input type="text" name="end" id="end" class="form-control time"/>
   </div>
 
   <button type="submit" class="btn btn-success">Save</button>
 </form>
+<script>
+    $(function() {
+        $('.time').timepicker({
+          'showDuration': true,
+          'timeFormat': 'H:i'
+        });
+
+        $('#date').datepicker({
+          'format': 'yyyy-m-d',
+          'autoclose': true
+        });
+    });
+</script>
 
 {% endblock %}
 {# [END form] #}

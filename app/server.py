@@ -123,6 +123,8 @@ def get_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
 def edit_resources(id):
+    # TODO if a resrouce name is updated, all resource_name in reservation table should also
+    # be updated.
     resource = Resource.query.get_or_404(id)
     tag_str = ''
     for tag in resource.tags:
@@ -136,7 +138,7 @@ def update_resources(id):
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     print data
-    if resource is None or data['owner_id'] != resrouce.owner_id:
+    if resource is None or data['owner_id'] != resource.owner_id:
         return redirect(url_for('.list'))
     resource.deserialize(data)
     # update tags
@@ -155,6 +157,8 @@ def update_resources(id):
 def delete_resources(id):
     resource = Resource.query.get(id)
     if resource:
+        for res in resource.reservations:
+            db.session.delete(res)
         db.session.delete(resource)
         db.session.commit()
     return redirect(url_for('.list'))
@@ -172,20 +176,30 @@ def get_res(id):
 @login_required
 def add_res(id):
     if request.method == 'GET':
-        return render_template('form_res.html', action="Add")
+        return render_template('form_res.html', action="Add", message="")
     data = request.form.to_dict(flat=True)
-    data['start_time'] = datetime(*[int(v) for v in data['start'].replace('T', '-').replace(':', '-').split('-')])
-    data['end_time'] = datetime(*[int(v) for v in data['end'].replace('T', '-').replace(':', '-').split('-')])
+    try:
+        date = [int(x) for x in data['date'].split('-')]
+        start = [int(x) for x in data['start'].split(':')]
+        end = [int(x) for x in data['end'].split(':')]
+        data['start_time'] = datetime(date[0], date[1], date[2], start[0], start[1])
+        data['end_time'] = datetime(date[0], date[1], date[2], end[0], end[1])
+    except:
+        return render_template('form_res.html', action="Add", message="Input Invalid")
+    # TODO more check about reservation could be made in that period of time should be performed
+    if not valid_res(start, end, id):
+        return render_template('form_res.html', action="Add", message="Time invalid")
     data['user_id'] = current_user.id
     data['resource_id'] = id
     resource = Resource.query.get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     data['resource_name'] = resource.name
-    print data
+    resource.last_reserve_time = datetime.now()
     reservation = Reservation()
     reservation.deserialize(data)
     db.session.add(reservation)
+    db.session.add(resource)
     db.session.commit()
     return redirect(url_for('.list'))
 
@@ -201,4 +215,16 @@ def get_res_for_resource(id):
 @app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_res(id):
-    pass
+    reservation = Reservation.query.get(id)
+    if reservation:
+        db.session.delete(reservation)
+        db.session.commit()
+    return redirect(url_for('.list'))
+
+def valid_res(start, end, res_id):
+    valid = True
+    if end[0] < start[0]:
+        valid = False
+    if start[0] == end[0] and end[1] <= start[1]:
+        valid = False
+    return valid
