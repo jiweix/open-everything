@@ -27,7 +27,7 @@ def load_user(user_id):
 def register():
     if request.method == 'GET':
         print "register template"
-        return render_template('register.html')
+        return render_template('login.html', message="Please Register", button="Register")
     data = request.form.to_dict(flat=True)
     user = User(data['email'] , bcrypt.generate_password_hash(data['password']))
     db.session.add(user)
@@ -38,7 +38,9 @@ def register():
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'GET':
-        return render_template('login.html')
+        if current_user.is_authenticated:
+            return redirect(url_for('.list'))
+        return render_template('login.html', message="Please Login", button="Login")
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is None or not bcrypt.check_password_hash(user.passhash, data['password']):

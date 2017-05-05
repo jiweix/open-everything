@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<a href="/resources/add" class="btn btn-default">
-  <i class="glyphicon glyphicon-plus"></i>
-  Add Resource
-</a>
 <div class="row">
   <div class="col-sm-4">
     <h3>My Resources</h3>
@@ -41,11 +37,11 @@
   </div>
 
   <div class="col-sm-4">
-    <h3>My Reservation</h3>
+    <h3>My Reservations</h3>
     {% for reservation in my_reservation %}
     <div>
       <a href="/reservations/{{reservation.id}}">
-          <h4>{{reservation.resource_name}}</h4>
+          <h4>Reservation with {{reservation.resource_name}}</h4>
      </a>
           <div>From: <strong>{{reservation.start_time.strftime('%Y-%m-%d %H:%M')}}</strong> To: <strong>{{reservation.end_time.strftime('%H:%M')}}</strong></div>
     </div>
@@ -53,6 +49,14 @@
     <div>No reservation found</div>
     {% endfor %}
   </div>
+</div>
+<div class="container" style="height:40px; width:100%; clear:both;"></div>
+
+<div class="text-center">
+  <a href="/resources/add" class="btn btn-default">
+    <i class="glyphicon glyphicon-plus"></i>
+    Add Resource
+  </a>
 </div>
 
 

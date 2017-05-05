@@ -10,22 +10,38 @@
 {% endif %}
 <form method="POST" enctype="multipart/form-data">
 
-  <div class="form-group">
-    <label for="start">Date</label>
-    <input type="text" name="date" id="date" class="form-control"/>
+  <div class="form-horizontal">
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="start">Date</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="date" id="date" class="form-control"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="start">Start</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="start" id="start" class="form-control time"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class = "control-label col-md-2">
+        <label for="end">End</label>
+      </div>
+      <div class="col-md-10">
+        <input type="text" name="end" id="end" class="form-control time"/>
+      </div>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label for="start">Start</label>
-    <input type="text" name="start" id="start" class="form-control time"/>
+  <div class="text-center">
+    <button type="submit" class="btn btn-default">Save</button>
   </div>
-
-  <div class="form-group">
-    <label for="end">End</label>
-    <input type="text" name="end" id="end" class="form-control time"/>
-  </div>
-
-  <button type="submit" class="btn btn-success">Save</button>
 </form>
 <script>
     $(function() {

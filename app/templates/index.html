@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h2> Welcome to the new resource share platform!</h2>
-<h4> Please login or create an account to continue </h4>
+<div class="text-center">
+  <h2> Welcome to the new resource share platform!</h2>
+  <h4> Please login or create an account to continue </h4>
+</div>
 <div class="control-group">
-  <form action="/login" class="col-md-2">
+  <div class="col-md-4"></div>
+  <form action="/login" class="col-md-2 text-center">
     <input type="submit" class="btn btn-default" value="Login" />
   </form>
-  <form action="/register" class="col-md-2">
+  <form action="/register" class="col-md-2 text-center">
     <input type="submit" class="btn btn-default" value="register" />
   </form>
+  <div class="col-md-4"></div>
 </div>
 {% endblock %}
