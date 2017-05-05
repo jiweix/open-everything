@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="/resources/add" class="btn btn-default">
+  <i class="glyphicon glyphicon-plus"></i>
+  Add Resource
+</a>
+<div class="row">
+    <h3>All Reservation for {{resource.name}}</h3>
+    {% for reservation in reservations %}
+    <div>
+      <a href="/reservations/{{reservation.id}}">
+          <h4>{{resource.resource_name}}</h4>
+          <p>{{resource.start_time}}</p>
+          <p>{{resource.end_time}}</p>
+      </a>
+    </div>
+    {% else %}
+    <p>No reservation found</p>
+    {% endfor %}
+</div>
+
+
+
+
+{% endblock %}

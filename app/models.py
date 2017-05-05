@@ -36,6 +36,7 @@ class Resource(db.Model):
     # time should be hh:mm in 24 hour format
     available_start = db.Column(db.String(5))
     available_end = db.Column(db.String(5))
+    last_reserve_time = db.Column(db.DateTime)
     tags = db.relationship('Tag', secondary=association_table, backref='resource')
     reservations = db.relationship('Reservation', backref='resource',
                                 lazy='dynamic')
@@ -45,7 +46,8 @@ class Resource(db.Model):
                  "name": self.name,
                  "owner_id": self.owner_id,
                  "available_start": self.available_start,
-                 "available_end": self.available_end
+                 "available_end": self.available_end,
+                 "last_reserve_time": self.last_reserve_time
                 }
 
     def deserialize(self, data):
@@ -54,6 +56,7 @@ class Resource(db.Model):
             self.owner_id = int(data['owner_id'])
             self.available_start = data['available_start']
             self.available_end = data['available_end']
+            self.last_reserve_time = datetime.now()
         except KeyError as e:
             raise KeyError('Invalid resource: missing ' + e.args[0])
         except TypeError as e:
@@ -73,8 +76,8 @@ class Reservation(db.Model):
     resource_name = db.Column(db.String(100))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # duration should be calculate from these column
-    start_time = db.Column(db.Datetime)
-    end_time = db.Column(db.Datetime)
+    start_time = db.Column(db.DateTime)
+    end_time = db.Column(db.DateTime)
     duration = db.Column(db.Integer)
 
     def serialize(self):

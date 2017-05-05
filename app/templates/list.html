@@ -1,50 +1,64 @@
-{#
-# Copyright 2015 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#}
-
 {% extends "base.html" %}
 
 {% block content %}
-
-<h3>Resources</h3>
-<a href="/resources/add" class="btn btn-success btn-sm">
+<a href="/resources/add" class="btn btn-default">
   <i class="glyphicon glyphicon-plus"></i>
   Add Resource
 </a>
-
-{% for resource in resources %}
-<div class="media">
-  <a href="/resources/{{resource.id}}">
-    <div class="media-left">
-      <img src="http://placekitten.com/g/128/192">
+<div class="row">
+  <div class="col-sm-4">
+    <h3>My Resources</h3>
+    {% for resource in my_resources %}
+    <div>
+      <a href="/resources/{{resource.id}}">
+          <h4>{{resource.name}}</h4>
+          <p>{{resource.available_start}}</p>
+          <p>{{resource.available_end}}</p>
+          <p>{% for tag in resource.tags %}
+            {{tag.value}}
+          {% endfor %}</p>
+      </a>
     </div>
-    <div class="media-body">
-      <h4>{{resource.name}}</h4>
-      <p>{{resource.available_start}}</p>
-      <p>{{resource.available_end}}</p>
-      <p>{% for tag in resource.tags %}
-        {{tag.value}}
+    {% else %}
+    <p>No resource found</p>
+    {% endfor %}
+  </div>
 
-      {% endfor %}</p>
-
+  <div class="col-sm-4">
+    <h3>All Resources</h3>
+    {% for resource in resources %}
+    <div>
+      <a href="/resources/{{resource.id}}">
+          <h4>{{resource.name}}</h4>
+          <p>{{resource.available_start}}</p>
+          <p>{{resource.available_end}}</p>
+          <p>{% for tag in resource.tags %}
+            {{tag.value}}
+          {% endfor %}</p>
+      </a>
     </div>
-  </a>
+    {% else %}
+    <p>No resource found</p>
+    {% endfor %}
+  </div>
+
+  <div class="col-sm-4">
+    <h3>My Reservation</h3>
+    {% for reservation in my_reservation %}
+    <div>
+      <a href="/reservations/{{reservation.id}}">
+          <h4>{{reservation.resource_name}}</h4>
+          <p>{{reservation.start_time}}</p>
+          <p>{{reservation.end_time}}</p>
+      </a>
+    </div>
+    {% else %}
+    <p>No reservation found</p>
+    {% endfor %}
+  </div>
 </div>
-{% else %}
-<p>No resource found</p>
-{% endfor %}
+
+
 
 
 {% endblock %}

@@ -17,7 +17,7 @@ from models import db, Resource, User, Reservation, Tag
 from . import app, login_manager, bcrypt
 from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
 from flask_login import login_required, login_user, current_user, logout_user
-
+from datetime import datetime
 # User management
 @login_manager.user_loader
 def load_user(user_id):
@@ -42,7 +42,7 @@ def login():
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is None or not bcrypt.check_password_hash(user.passhash, data['password']):
-        flash('Username or Password is invalid' , 'error')
+        print 'Username or Password is invalid'
         return redirect(url_for('login'))
     user.authenticated = True
     db.session.add(user)
@@ -70,9 +70,23 @@ def index():
 @app.route('/resources', methods=['GET'])
 @login_required
 def list():
+    '''
+    the landing page,
+    viewers will see three sections:
+    (1) reservations made for resources by that user, sorted by reservation time;
+    (2) all resources in the system, shown in reverse time order based on last made reservation;
+    (3) resources that the user owns, each linked to its URL
+    (4) a link to create a new resource
+    '''
     resources = [res for res in Resource.query.all()]
+    resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
+    user = current_user
+    my_reservation = [res for res in user.reservations]
+    my_reservation.sort(key=lambda x: x.start_time)
     return render_template(
         "list.html",
+        my_reservation=my_reservation,
+        my_resources=user.resources,
         resources=resources)
 
 @app.route('/resources/add', methods=['GET'])
@@ -122,6 +136,8 @@ def update_resources(id):
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     print data
+    if resource is None or data['owner_id'] != resrouce.owner_id:
+        return redirect(url_for('.list'))
     resource.deserialize(data)
     # update tags
     tag_list = data['tag'].split()
@@ -134,7 +150,7 @@ def update_resources(id):
     db.session.commit()
     return redirect(url_for('.get_resources', id=resource.id))
 
-@app.route('/resources/<int:id>/delete', methods=['get'])
+@app.route('/resources/<int:id>/delete', methods=['GET'])
 @login_required
 def delete_resources(id):
     resource = Resource.query.get(id)
@@ -142,3 +158,47 @@ def delete_resources(id):
         db.session.delete(resource)
         db.session.commit()
     return redirect(url_for('.list'))
+
+# Reservation management
+@app.route('/reservations/<int:id>', methods=['GET'])
+@login_required
+def get_res(id):
+    reservation = Reservation.query.get(id)
+    if not reservation:
+        raise NotFound("reservation with id '{}' was not found.".format(id))
+    return render_template("view_res.html", reservation=reservation)
+
+@app.route('/resources/<int:id>/add_reservation', methods=['GET', 'POST'])
+@login_required
+def add_res(id):
+    if request.method == 'GET':
+        return render_template('form_res.html', action="Add")
+    data = request.form.to_dict(flat=True)
+    data['start_time'] = datetime(*[int(v) for v in data['start'].replace('T', '-').replace(':', '-').split('-')])
+    data['end_time'] = datetime(*[int(v) for v in data['end'].replace('T', '-').replace(':', '-').split('-')])
+    data['user_id'] = current_user.id
+    data['resource_id'] = id
+    resource = Resource.query.get(id)
+    if resource is None:
+        raise NotFound("resource with id '{}' was not found.".format(id))
+    data['resource_name'] = resource.name
+    print data
+    reservation = Reservation()
+    reservation.deserialize(data)
+    db.session.add(reservation)
+    db.session.commit()
+    return redirect(url_for('.list'))
+
+@app.route('/resources/<int:id>/get_reservations', methods=['GET'])
+@login_required
+def get_res_for_resource(id):
+    resource = Resource.query.get(id)
+    if resource is None:
+        raise NotFound("resource with id '{}' was not found.".format(id))
+    reservations = resource.reservations
+    return render_template("list_res.html", reservations=reservations, resource=resource)
+
+@app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_res(id):
+    pass

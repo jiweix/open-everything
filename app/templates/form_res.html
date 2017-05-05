@@ -1,0 +1,23 @@
+{# [START form] #}
+{% extends "base.html" %}
+
+{% block content %}
+<h3>{{action}} Reservation</h3>
+
+<form method="POST" enctype="multipart/form-data">
+
+  <div class="form-group">
+    <label for="start">Start</label>
+    <input type="datetime-local" name="start" id="start" class="form-control"/>
+  </div>
+
+  <div class="form-group">
+    <label for="end">End</label>
+    <input type="datetime-local" name="end" id="end" class="form-control"/>
+  </div>
+
+  <button type="submit" class="btn btn-success">Save</button>
+</form>
+
+{% endblock %}
+{# [END form] #}
