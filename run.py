@@ -22,9 +22,9 @@ debug = (os.getenv('DEBUG', 'False') == 'True')
 port = os.getenv('PORT', '8080')
 
 # app configuration
-if 'DATABASE_URL' in os.environ:
+if 'CLEARDB_DATABASE_URL' in os.environ:
     # setup database for heroku
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['CLEARDB_DATABASE_URL']
 else:
     # use local db if develop locally
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
@@ -36,9 +36,7 @@ app.config['LOGGING_LEVEL'] = logging.INFO
 debug = (os.getenv('DEBUG', 'False') == 'True')
 port = os.getenv('PORT', '8080')
 
-if __name__ == "__main__":
-    print "Share Everythinbg Server Starting..."
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=int(port), debug=debug)
+db.init_app(app)
+with app.app_context():
+    db.create_all()
+app.run(host='0.0.0.0', port=int(port), debug=debug)
