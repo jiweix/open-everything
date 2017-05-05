@@ -45,6 +45,9 @@
      </a>
           <div>From: <strong>{{reservation.start_time.strftime('%Y-%m-%d %H:%M')}}</strong> To: <strong>{{reservation.end_time.strftime('%H:%M')}}</strong></div>
     </div>
+    <a href="/reservations/{{reservation.id}}/delete">
+        delete this reservation
+   </a>
     {% else %}
     <div>No reservation found</div>
     {% endfor %}

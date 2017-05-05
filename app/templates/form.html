@@ -12,7 +12,11 @@
         <label for="name">Name</label>
       </div>
       <div class="col-md-10">
+        {% if action == "Add" %}
         <input type="text" name="name" id="name" value="{{resource.name}}" class="form-control"/>
+        {% else %}
+        <input type="text" name="name" id="name" value="{{resource.name}}" class="form-control" disabled/>
+        {% endif %}
       </div>
     </div>
 

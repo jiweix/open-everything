@@ -83,7 +83,7 @@ def list():
     resources = [res for res in Resource.query.all()]
     resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
     user = current_user
-    my_reservation = [res for res in user.reservations]
+    my_reservation = [res for res in user.reservations if res.end_time > datetime.now()]
     my_reservation.sort(key=lambda x: x.start_time)
     return render_template(
         "list.html",
@@ -120,7 +120,8 @@ def get_resources(id):
     resource = Resource.query.get(id)
     if not resource:
         raise NotFound("resource with id '{}' was not found.".format(id))
-    return render_template("view.html", resource=resource)
+    owner = current_user.id == resource.owner_id
+    return render_template("view.html", resource=resource, owner=owner)
 
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
@@ -160,7 +161,7 @@ def update_resources(id):
 @login_required
 def delete_resources(id):
     resource = Resource.query.get(id)
-    if resource:
+    if resource is not None and resource.owner_id == current_user.id:
         for res in resource.reservations:
             db.session.delete(res)
         db.session.delete(resource)
@@ -172,7 +173,7 @@ def delete_resources(id):
 @login_required
 def get_res(id):
     reservation = Reservation.query.get(id)
-    if not reservation:
+    if not reservation or reservation.end_time < datetime.now():
         raise NotFound("reservation with id '{}' was not found.".format(id))
     return render_template("view_res.html", reservation=reservation)
 
@@ -213,7 +214,7 @@ def get_res_for_resource(id):
     resource = Resource.query.get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
-    reservations = resource.reservations
+    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
     return render_template("list_res.html", reservations=reservations, resource=resource)
 
 @app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
