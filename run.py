@@ -17,14 +17,15 @@ import os
 import logging
 from app.models import db
 from app import app, server
+import pymysql
 
 debug = (os.getenv('DEBUG', 'False') == 'True')
 port = os.getenv('PORT', '8080')
 
 # app configuration
-if 'CLEARDB_DATABASE_URL' in os.environ:
+if 'DATABASE_URL' in os.environ:
     # setup database for heroku
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['CLEARDB_DATABASE_URL']
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 else:
     # use local db if develop locally
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
