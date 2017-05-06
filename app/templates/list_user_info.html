@@ -2,27 +2,8 @@
 
 {% block content %}
 <div class="row">
-  <div class="col-sm-4">
-    <h3>My Resources</h3>
-    {% for resource in my_resources %}
-    <div>
-      <a href="/resources/{{resource.id}}">
-          <h4>{{resource.name}}</h4>
-      </a>
-      <div>Available from {{resource.available_start}} to {{resource.available_end}}</div>
-      <div>Tags: {% for tag in resource.tags %}
-        <a href="/tags/{{tag.id}}">
-        {{tag.value}}
-        </a>
-      {% endfor %}</div>
-    </div>
-    {% else %}
-    <div>No resource found</div>
-    {% endfor %}
-  </div>
-
-  <div class="col-sm-4">
-    <h3>All Resources</h3>
+  <div class="col-sm-6">
+    <h3>User Resources</h3>
     {% for resource in resources %}
     <div>
       <a href="/resources/{{resource.id}}">
@@ -40,9 +21,9 @@
     {% endfor %}
   </div>
 
-  <div class="col-sm-4">
-    <h3>My Reservations</h3>
-    {% for reservation in my_reservation %}
+  <div class="col-sm-6">
+    <h3>User Reservations</h3>
+    {% for reservation in reservations %}
     <div>
       <a href="/reservations/{{reservation.id}}">
           <h4>Reservation with {{reservation.resource_name}}</h4>
@@ -57,16 +38,4 @@
     {% endfor %}
   </div>
 </div>
-<div class="container" style="height:40px; width:100%; clear:both;"></div>
-
-<div class="text-center">
-  <a href="/resources/add" class="btn btn-default">
-    <i class="glyphicon glyphicon-plus"></i>
-    Add Resource
-  </a>
-</div>
-
-
-
-
 {% endblock %}

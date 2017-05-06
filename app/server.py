@@ -66,10 +66,12 @@ def logout():
 
 @app.route('/', methods=['GET'])
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('.list'))
     return render_template('index.html')
 
 # Resource management, need to be updated
-@app.route('/resources', methods=['GET'])
+@app.route('/home', methods=['GET'])
 @login_required
 def list():
     '''
@@ -225,6 +227,27 @@ def delete_res(id):
         db.session.delete(reservation)
         db.session.commit()
     return redirect(url_for('.list'))
+
+@app.route('/tags/<int:id>', methods=['GET'])
+@login_required
+def get_resources_with_tag(id):
+    tag = Tag.query.get(id)
+    if not tag:
+        raise NotFound("tag with id '{}' was not found.".format(id))
+    resources = tag.resources
+    return render_template("list_tag_resource.html", resources=resources, tag=tag)
+
+@app.route('/users/<int:id>', methods=['GET'])
+@login_required
+def get_user(id):
+    user = User.query.get(id)
+    if not user:
+        raise NotFound("user with id '{}' was not found.".format(id))
+    resources = [res for res in user.resources]
+    resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
+    reservations = [res for res in user.reservations if res.end_time > datetime.now()]
+    reservations.sort(key=lambda x: x.start_time)
+    return render_template("list_user_info.html", resources=resources, reservations=reservations)
 
 def valid_res(start, end, res_id):
     valid = True

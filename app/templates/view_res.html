@@ -10,7 +10,20 @@
       Resource Name
     </div>
     <div class="col-md-8">
-      {{reservation.resource_name}}
+      <a href="/resources/{{reservation.resource_id}}">
+        {{reservation.resource_name}}
+      </a>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class = "col-md-4">
+      User_id
+    </div>
+    <div class="col-md-8">
+      <a href="/users/{{reservation.user_id}}">
+        {{reservation.user_id}}
+      </a>
     </div>
   </div>
 

@@ -18,10 +18,19 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-association_table = db.Table('association', db.Model.metadata,
-    db.Column('resource_id', db.Integer, db.ForeignKey('resource.id')),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
-)
+class Tag_Resource(db.Model):
+    __tablename__ = "tag_resource"
+    id = db.Column(db.Integer, primary_key=True)
+    resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
+
+    resource = db.relationship("Resource", backref=db.backref("tag_resource", cascade="all, delete-orphan"))
+    tag = db.relationship("Tag", backref=db.backref("tag_resource", cascade="all, delete-orphan"))
+
+    def __init__(self, resource_id, tag_id):
+        self.resource_id = resource_id
+        self.tag_id = tag_id
+
 
 class Resource(db.Model):
     '''
@@ -37,7 +46,7 @@ class Resource(db.Model):
     available_start = db.Column(db.String(5))
     available_end = db.Column(db.String(5))
     last_reserve_time = db.Column(db.DateTime)
-    tags = db.relationship('Tag', secondary=association_table, backref='resource')
+    tags = db.relationship('Tag', secondary="tag_resource", lazy='dynamic')
     reservations = db.relationship('Reservation', backref='resource',
                                 lazy='dynamic')
 
@@ -116,6 +125,8 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # lower case letters
     value = db.Column(db.String(20))
+
+    resources = db.relationship('Resource', secondary="tag_resource", lazy='dynamic')
 
     def __init__(self, value):
         self.value = value
