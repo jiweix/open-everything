@@ -23,6 +23,9 @@ from datetime import datetime
 def load_user(user_id):
     return User.query.filter(User.id == int(user_id)).first()
 
+######################################################################
+# Register a user
+######################################################################
 @app.route('/register' , methods=['GET','POST'])
 def register():
     if request.method == 'GET':
@@ -35,6 +38,9 @@ def register():
     print 'User successfully registered'
     return redirect(url_for('login'))
 
+######################################################################
+# Login a user
+######################################################################
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'GET':
@@ -53,6 +59,9 @@ def login():
     print 'Logged in successfully'
     return redirect(url_for('.list'))
 
+######################################################################
+# Log out a user
+######################################################################
 @app.route('/logout',methods=['GET'])
 @login_required
 def logout():
@@ -64,13 +73,18 @@ def logout():
     return redirect(url_for('.login'))
 # End of User management
 
+######################################################################
+# Index page, should show register and log in option if not logged in
+######################################################################
 @app.route('/', methods=['GET'])
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('.list'))
     return render_template('index.html')
 
-# Resource management, need to be updated
+######################################################################
+# Landing page
+######################################################################
 @app.route('/home', methods=['GET'])
 @login_required
 def list():
@@ -93,14 +107,14 @@ def list():
         my_resources=user.resources,
         resources=resources)
 
-@app.route('/resources/add', methods=['GET'])
-@login_required
-def add():
-    return render_template("form.html", action="Add", resource={}, tag="")
-
-@app.route('/resources/add', methods=['POST'])
+######################################################################
+# Add a resource
+######################################################################
+@app.route('/resources/add', methods=['GET','POST'])
 @login_required
 def add_resource():
+    if request.method == 'GET':
+        return render_template("form.html", action="Add", resource={}, tag="")
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     print data
@@ -116,6 +130,9 @@ def add_resource():
     db.session.commit()
     return redirect(url_for('.get_resources', id=resource.id))
 
+######################################################################
+# Retrieve a resource
+######################################################################
 @app.route('/resources/<int:id>', methods=['GET'])
 @login_required
 def get_resources(id):
@@ -125,6 +142,9 @@ def get_resources(id):
     owner = current_user.id == resource.owner_id
     return render_template("view.html", resource=resource, owner=owner)
 
+######################################################################
+# Edit a resource (GET)
+######################################################################
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
 def edit_resources(id):
@@ -134,6 +154,9 @@ def edit_resources(id):
         tag_str += tag.value + " "
     return render_template("form.html", action="Edit", resource=resource, tag=tag_str[:-1])
 
+######################################################################
+# Edit a resource (POST)
+######################################################################
 @app.route('/resources/<int:id>/edit', methods=['POST'])
 @login_required
 def update_resources(id):
@@ -159,6 +182,9 @@ def update_resources(id):
     db.session.commit()
     return redirect(url_for('.get_resources', id=resource.id))
 
+######################################################################
+# Delete a resource
+######################################################################
 @app.route('/resources/<int:id>/delete', methods=['GET'])
 @login_required
 def delete_resources(id):
@@ -170,7 +196,9 @@ def delete_resources(id):
         db.session.commit()
     return redirect(url_for('.list'))
 
-# Reservation management
+######################################################################
+# Get a reservation
+######################################################################
 @app.route('/reservations/<int:id>', methods=['GET'])
 @login_required
 def get_res(id):
@@ -179,6 +207,9 @@ def get_res(id):
         raise NotFound("reservation with id '{}' was not found.".format(id))
     return render_template("view_res.html", reservation=reservation)
 
+######################################################################
+# Add a reservation
+######################################################################
 @app.route('/resources/<int:id>/add_reservation', methods=['GET', 'POST'])
 @login_required
 def add_res(id):
@@ -210,6 +241,9 @@ def add_res(id):
     db.session.commit()
     return redirect(url_for('.list'))
 
+######################################################################
+# Get reservations for one resource
+######################################################################
 @app.route('/resources/<int:id>/get_reservations', methods=['GET'])
 @login_required
 def get_res_for_resource(id):
@@ -219,6 +253,9 @@ def get_res_for_resource(id):
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
     return render_template("list_res.html", reservations=reservations, resource=resource)
 
+######################################################################
+# Delete a reservation
+######################################################################
 @app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_res(id):
@@ -228,6 +265,9 @@ def delete_res(id):
         db.session.commit()
     return redirect(url_for('.list'))
 
+######################################################################
+# Get resources with 'tag'
+######################################################################
 @app.route('/tags/<int:id>', methods=['GET'])
 @login_required
 def get_resources_with_tag(id):
@@ -237,6 +277,9 @@ def get_resources_with_tag(id):
     resources = tag.resources
     return render_template("list_tag_resource.html", resources=resources, tag=tag)
 
+######################################################################
+# Get a user's info (reservation, resources)
+######################################################################
 @app.route('/users/<int:id>', methods=['GET'])
 @login_required
 def get_user(id):
@@ -249,6 +292,9 @@ def get_user(id):
     reservations.sort(key=lambda x: x.start_time)
     return render_template("list_user_info.html", resources=resources, reservations=reservations)
 
+######################################################################
+#  H E L P E R  F U N C T I O N S
+######################################################################
 def valid_res(start, end, res_id):
     valid = True
     if end[0] < start[0]:

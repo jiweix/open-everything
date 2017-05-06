@@ -19,6 +19,9 @@ from datetime import datetime
 db = SQLAlchemy()
 
 class Tag_Resource(db.Model):
+    '''
+    Tag Resource relationship. Used to link resource to tag
+    '''
     __tablename__ = "tag_resource"
     id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
