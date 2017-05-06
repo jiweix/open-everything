@@ -15,13 +15,20 @@
 ######################################################################
 from models import db, Resource, User, Reservation, Tag
 from . import app, login_manager, bcrypt
+import flask
 from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
 from flask_login import login_required, login_user, current_user, logout_user
-from datetime import datetime
-# User management
+from datetime import datetime, timedelta
+
+# --------------------- User management ------------------------------
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter(User.id == int(user_id)).first()
+
+@app.before_request
+def make_session_permanent():
+    flask.session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
 
 ######################################################################
 # Register a user
@@ -71,7 +78,7 @@ def logout():
     db.session.commit()
     logout_user()
     return redirect(url_for('.login'))
-# End of User management
+# --------------------- End of User management -----------------------
 
 ######################################################################
 # Index page, should show register and log in option if not logged in
@@ -108,7 +115,7 @@ def list():
         resources=resources)
 
 ######################################################################
-# Add a resource
+# Add a resource (GET and POST)
 ######################################################################
 @app.route('/resources/add', methods=['GET','POST'])
 @login_required
@@ -143,7 +150,7 @@ def get_resources(id):
     return render_template("view.html", resource=resource, owner=owner)
 
 ######################################################################
-# Edit a resource (GET)
+# Edit a resource (GET the edit page)
 ######################################################################
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
@@ -219,17 +226,19 @@ def add_res(id):
     try:
         date = [int(x) for x in data['date'].split('-')]
         start = [int(x) for x in data['start'].split(':')]
-        end = [int(x) for x in data['end'].split(':')]
+        duration = [int(x) for x in data['duration'].split(':')]
+        end = [start[0]+duration[0], start[1]+duration[1]]
         data['start_time'] = datetime(date[0], date[1], date[2], start[0], start[1])
         data['end_time'] = datetime(date[0], date[1], date[2], end[0], end[1])
     except:
-        return render_template('form_res.html', action="Add", message="Input Invalid")
+        return render_template('form_res.html', action="Add", message="Time Input Invalid")
     # TODO more check about reservation could be made in that period of time should be performed
-    if not valid_res(start, end, id):
-        return render_template('form_res.html', action="Add", message="Time invalid")
+    resource = Resource.query.get(id)
+    message = valid_res(data['start_time'], data['end_time'], resource)
+    if message != "":
+        return render_template('form_res.html', action="Add", message=message)
     data['user_id'] = current_user.id
     data['resource_id'] = id
-    resource = Resource.query.get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     data['resource_name'] = resource.name
@@ -295,10 +304,16 @@ def get_user(id):
 ######################################################################
 #  H E L P E R  F U N C T I O N S
 ######################################################################
-def valid_res(start, end, res_id):
-    valid = True
-    if end[0] < start[0]:
-        valid = False
-    if start[0] == end[0] and end[1] <= start[1]:
-        valid = False
-    return valid
+def valid_res(start, end, resource):
+    if start > end:
+        return "End must later than Start"
+    res_start = [int(x) for x in resource.available_start.split(':')]
+    res_end = [int(x) for x in resource.available_end.split(':')]
+    if start.hour < res_start[0] or (start.hour == res_start[0] and start.minute < res_start[1]):
+        return "Start time is before the resource available start"
+    if end.hour > res_end[0] or (end.hour == res_end[0] and end.minute > res_end[1]):
+        return "End time is after the resource available end"
+    for reservation in resource.reservations:
+        if reservation.end_time > start and reservation.start_time < end:
+            return "Reservation in that period"
+    return ""
