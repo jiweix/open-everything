@@ -47,7 +47,7 @@
       <a href="/reservations/{{reservation.id}}">
           <h4>Reservation with {{reservation.resource_name}}</h4>
      </a>
-          <div>From: <strong>{{reservation.start_time.strftime('%Y-%m-%d %H:%M')}}</strong> To: <strong>{{reservation.end_time.strftime('%H:%M')}}</strong></div>
+          <div>From: <strong>{{reservation.start_time.strftime('%Y-%m-%d %H:%M')}}</strong> Duration: <strong>{{reservation.duration}}</strong></div>
     </div>
     <a href="/reservations/{{reservation.id}}/delete">
         delete this reservation
@@ -60,7 +60,7 @@
 <div class="container" style="height:40px; width:100%; clear:both;"></div>
 
 <div class="text-center">
-  <a href="/resources/add" class="btn btn-default">
+  <a href="/resources/add" class="btn btn-success">
     <i class="glyphicon glyphicon-plus"></i>
     Add Resource
   </a>

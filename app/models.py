@@ -90,7 +90,7 @@ class Reservation(db.Model):
     # duration should be calculate from these column
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
-    duration = db.Column(db.Integer)
+    duration = db.Column(db.String(5))
 
     def serialize(self):
         return { "id": self.id,
@@ -109,15 +109,13 @@ class Reservation(db.Model):
             self.user_id = int(data['user_id'])
             self.start_time = data['start_time']
             self.end_time = data['end_time']
-            self.duration = self.get_duration(data['start_time'], data['end_time'])
+            self.duration = data['duration']
         except KeyError as e:
             raise KeyError('Invalid reservation: missing ' + e.args[0])
         except TypeError as e:
             raise TypeError('Invalid reservation: body of request contained bad or no data')
         return self
 
-    def get_duration(self, start, end):
-        return int((end - start).total_seconds() / 60.0)
 
 class Tag(db.Model):
     '''

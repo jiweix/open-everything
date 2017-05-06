@@ -48,24 +48,24 @@
 <div>
   <div class="col-md-2"></div>
   <div class="text-center col-md-2">
-    <a href="/resources/{{resource.id}}/add_reservation" class="btn btn-default">
-      Create reservation
+    <a href="/resources/{{resource.id}}/add_reservation" class="btn btn-success">
+      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Create reservation
     </a>
   </div>
   <div class="text-center col-md-2">
-    <a href="/resources/{{resource.id}}/get_reservations" class="btn btn-default">
-      Get all reservations
+    <a href="/resources/{{resource.id}}/get_reservations" class="btn btn-info">
+      <span class="glyphicon glyphicon-hand-up" aria-hidden="true"></span> Get all reservations
     </a>
   </div>
   {% if owner %}
   <div class="text-center col-md-2">
-    <a href="/resources/{{resource.id}}/edit" class="btn btn-default">
-      Edit resource
+    <a href="/resources/{{resource.id}}/edit" class="btn btn-primary">
+      <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit resource
     </a>
   </div>
   <div class="text-center col-md-2">
-    <a href="/resources/{{resource.id}}/delete" class="btn btn-default">
-      Delete resource
+    <a href="/resources/{{resource.id}}/delete" class="btn btn-danger">
+      <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Delete resource
     </a>
   </div>
   {% endif %}
