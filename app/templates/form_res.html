@@ -2,6 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div>
 <h3>{{action}} Reservation</h3>
 {% if message != "" %}
 <div class="alert alert-danger" role="alert">
@@ -39,6 +40,24 @@
     <button type="submit" class="btn btn-success">Save</button>
   </div>
 </form>
+</div>
+<div>
+  <h4>Upcoming reservation time</h4>
+  {% for res in reservations %}
+  <div class="row text-center">
+    <div class="col-md-1"></div>
+    <div class="col-md-3">
+      {{res.start_time.strftime("%Y-%m-%d")}}
+    </div>
+    <div class="col-md-3">
+      From {{res.start_time.strftime("%H:%M")}}
+    </div>
+    <div class="col-md-3">
+      To {{res.end_time.strftime("%H:%M")}}
+    </div>
+  </div>
+  {% endfor %}
+</div>
 <script>
     $(function() {
         $('.time').timepicker({

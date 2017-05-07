@@ -2,6 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div>
 <h3>{{action}} resource</h3>
 <hr />
 <form method="POST" enctype="multipart/form-data">
@@ -51,6 +52,9 @@
     </div>
   </div>
 </form>
+</div>
+
+
 <script>
     $(function() {
         $('#available_start').timepicker({ 'timeFormat': 'H:i' });

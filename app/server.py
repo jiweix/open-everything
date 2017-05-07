@@ -39,11 +39,17 @@ def unauthorized():
 @app.errorhandler(404)
 def page_not_found(e):
 
-    return render_template('404.html', code=404, index_page=not current_user.is_authenticated)
+    return render_template(
+        '404.html',
+        code=404,
+        index_page=not current_user.is_authenticated)
 
 @app.errorhandler(500)
 def page_not_found(e):
-    return render_template('404.html', code=500, index_page=not current_user.is_authenticated)
+    return render_template(
+        '404.html',
+        code=500,
+        index_page=not current_user.is_authenticated)
 # --------------------- End of App configuration ---------------------
 
 # --------------------- User management ------------------------------
@@ -54,11 +60,18 @@ def page_not_found(e):
 def register():
     if request.method == 'GET':
         print "register template"
-        return render_template('login.html', message="Please Register", button="Register", index_page=True)
+        return render_template(
+            'login.html',
+            message="Please Register",
+            button="Register",
+            index_page=True)
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is not None:
-        return render_template('login.html', message="Please Register, Email already taken", button="Register")
+        return render_template(
+            'login.html',
+            message="Please Register, Email already taken",
+            button="Register")
     user = User(data['email'] , bcrypt.generate_password_hash(data['password']))
     db.session.add(user)
     db.session.commit()
@@ -73,7 +86,11 @@ def login():
     if request.method == 'GET':
         if current_user.is_authenticated:
             return redirect(url_for('.list'))
-        return render_template('login.html', message="Please Login", button="Login", index_page=True)
+        return render_template(
+            'login.html',
+            message="Please Login",
+            button="Login",
+            index_page=True)
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is None or not bcrypt.check_password_hash(user.passhash, data['password']):
@@ -179,7 +196,11 @@ def edit_resources(id):
     tag_str = ''
     for tag in resource.tags:
         tag_str += tag.value + " "
-    return render_template("form.html", action="Edit", resource=resource, tag=tag_str[:-1])
+    return render_template(
+        "form.html",
+        action="Edit",
+        resource=resource,
+        tag=tag_str[:-1])
 
 ######################################################################
 # Edit a resource (POST)
@@ -240,8 +261,17 @@ def get_res(id):
 @app.route('/resources/<int:id>/add_reservation', methods=['GET', 'POST'])
 @login_required
 def add_res(id):
+    resource = Resource.query.get(id)
+    if resource is None:
+        raise NotFound("resource with id '{}' was not found.".format(id))
+    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations.sort(key=lambda x: x.start_time)
     if request.method == 'GET':
-        return render_template('form_res.html', action="Add", message="")
+        return render_template(
+            'form_res.html',
+            action="Add",
+            message="",
+            reservations=reservations)
     data = request.form.to_dict(flat=True)
     try:
         date = [int(x) for x in data['date'].split('-')]
@@ -251,16 +281,20 @@ def add_res(id):
         data['start_time'] = datetime(date[0], date[1], date[2], start[0], start[1])
         data['end_time'] = datetime(date[0], date[1], date[2], end[0], end[1])
     except:
-        return render_template('form_res.html', action="Add", message="Time Input Invalid")
-    # TODO more check about reservation could be made in that period of time should be performed
-    resource = Resource.query.get(id)
+        return render_template(
+            'form_res.html',
+            action="Add",
+            message="Time Input Invalid",
+            reservations=reservations)
     message = valid_res(data['start_time'], data['end_time'], resource)
     if message != "":
-        return render_template('form_res.html', action="Add", message=message)
+        return render_template(
+            'form_res.html',
+            action="Add",
+            message=message,
+            reservations=reservations)
     data['user_id'] = current_user.id
     data['resource_id'] = id
-    if resource is None:
-        raise NotFound("resource with id '{}' was not found.".format(id))
     data['resource_name'] = resource.name
     resource.last_reserve_time = datetime.now()
     reservation = Reservation()
@@ -280,7 +314,28 @@ def get_res_for_resource(id):
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
-    return render_template("list_res.html", reservations=reservations, resource=resource)
+    return render_template(
+        "list_res.html",
+        reservations=reservations,
+        resource=resource)
+
+######################################################################
+# Get json reservations for one resource for calendar
+######################################################################
+@app.route('/resources/<int:id>/get_reservations_object', methods=['GET'])
+@login_required
+def get_res_for_resource_json(id):
+    resource = Resource.query.get(id)
+    if resource is None:
+        raise NotFound("resource with id '{}' was not found.".format(id))
+    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations.sort(key=lambda x: x.start_time)
+    results = []
+    for res in reservations:
+        results.append({"title" : res.id,
+                        "start" : res.start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "end" : res.end_time.strftime("%Y-%m-%dT%H:%M:%S")})
+    return make_response(jsonify(results), 200)
 
 ######################################################################
 # Delete a reservation
@@ -319,7 +374,10 @@ def get_user(id):
     resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
     reservations = [res for res in user.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
-    return render_template("list_user_info.html", resources=resources, reservations=reservations)
+    return render_template(
+        "list_user_info.html",
+        resources=resources,
+        reservations=reservations)
 
 ######################################################################
 # Generate RSS for a resource
@@ -353,7 +411,8 @@ def valid_res(start, end, resource):
     res_end = [int(x) for x in resource.available_end.split(':')]
     if start < datetime.now():
         return "Start time can't be in the past"
-    if start.hour < res_start[0] or (start.hour == res_start[0] and start.minute < res_start[1]):
+    if start.hour < res_start[0] or \
+        (start.hour == res_start[0] and start.minute < res_start[1]):
         return "Start time is before the resource available start"
     if end.hour > res_end[0] or (end.hour == res_end[0] and end.minute > res_end[1]):
         return "End time is after the resource available end"
