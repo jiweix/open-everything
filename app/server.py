@@ -34,15 +34,16 @@ def make_session_permanent():
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    return render_template('unauthorized.html')
+    return render_template('unauthorized.html', index_page=True)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html', code=404)
+
+    return render_template('404.html', code=404, index_page=not current_user.is_authenticated)
 
 @app.errorhandler(500)
 def page_not_found(e):
-    return render_template('404.html', code=500)
+    return render_template('404.html', code=500, index_page=not current_user.is_authenticated)
 # --------------------- End of App configuration ---------------------
 
 # --------------------- User management ------------------------------
@@ -53,7 +54,7 @@ def page_not_found(e):
 def register():
     if request.method == 'GET':
         print "register template"
-        return render_template('login.html', message="Please Register", button="Register")
+        return render_template('login.html', message="Please Register", button="Register", index_page=True)
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is not None:
@@ -72,7 +73,7 @@ def login():
     if request.method == 'GET':
         if current_user.is_authenticated:
             return redirect(url_for('.list'))
-        return render_template('login.html', message="Please Login", button="Login")
+        return render_template('login.html', message="Please Login", button="Login", index_page=True)
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
     if user is None or not bcrypt.check_password_hash(user.passhash, data['password']):
@@ -106,7 +107,7 @@ def logout():
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('.list'))
-    return render_template('index.html')
+    return render_template('index.html', index_page=True)
 
 ######################################################################
 # Landing page
