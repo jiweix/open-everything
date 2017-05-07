@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+{% if code == 404 %}
+<div class="text-center">
+  <h2> It's the one that says 'Page Not Found'.</h2>
+  <h4> -Pulp Fiction</h4>
+</div>
+{% endif %}
+{% if code == 500 %}
+<div class="text-center">
+  <h2> You are the wrong guy on the wrong page at the wrong time.</h2>
+  <h4> -Die Hard 2</h4>
+</div>
+{% endif %}
+{% endblock %}

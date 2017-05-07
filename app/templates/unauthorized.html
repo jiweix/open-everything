@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center">
+  <h2> You need to log in to taste the joy of sharing!</h2>
+  <h4> Please login or create an account</h4>
+</div>
+<div class="control-group">
+  <div class="col-md-3"></div>
+  <form action="/login" class="col-md-3 text-center">
+    <input type="submit" class="btn btn-default" value="Login" />
+  </form>
+  <form action="/register" class="col-md-3 text-center">
+    <input type="submit" class="btn btn-default" value="Register" />
+  </form>
+  <div class="col-md-3"></div>
+</div>
+{% endblock %}

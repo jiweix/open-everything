@@ -17,11 +17,12 @@ import flask
 from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
 from flask_login import login_required, login_user, current_user, logout_user
 from werkzeug.contrib.atom import AtomFeed
+from werkzeug.exceptions import NotFound
 from datetime import datetime, timedelta
 from models import db, Resource, User, Reservation, Tag
 from . import app, login_manager, bcrypt
 
-# --------------------- User management ------------------------------
+# --------------------- App configuration ---------------------------
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter(User.id == int(user_id)).first()
@@ -31,6 +32,20 @@ def make_session_permanent():
     flask.session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=10)
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    return render_template('unauthorized.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', code=404)
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('404.html', code=500)
+# --------------------- End of App configuration ---------------------
+
+# --------------------- User management ------------------------------
 ######################################################################
 # Register a user
 ######################################################################
@@ -40,6 +55,9 @@ def register():
         print "register template"
         return render_template('login.html', message="Please Register", button="Register")
     data = request.form.to_dict(flat=True)
+    user = User.query.filter_by(email=data['email']).first()
+    if user is not None:
+        return render_template('login.html', message="Please Register, Email already taken", button="Register")
     user = User(data['email'] , bcrypt.generate_password_hash(data['password']))
     db.session.add(user)
     db.session.commit()
@@ -332,6 +350,8 @@ def valid_res(start, end, resource):
         return "End must later than Start"
     res_start = [int(x) for x in resource.available_start.split(':')]
     res_end = [int(x) for x in resource.available_end.split(':')]
+    if start < datetime.now():
+        return "Start time can't be in the past"
     if start.hour < res_start[0] or (start.hour == res_start[0] and start.minute < res_start[1]):
         return "Start time is before the resource available start"
     if end.hour > res_end[0] or (end.hour == res_end[0] and end.minute > res_end[1]):
