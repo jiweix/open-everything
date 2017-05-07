@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-from models import db, Resource, User, Reservation, Tag
-from . import app, login_manager, bcrypt
 import flask
 from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
 from flask_login import login_required, login_user, current_user, logout_user
+from werkzeug.contrib.atom import AtomFeed
 from datetime import datetime, timedelta
+from models import db, Resource, User, Reservation, Tag
+from . import app, login_manager, bcrypt
 
 # --------------------- User management ------------------------------
 @login_manager.user_loader
@@ -300,6 +301,28 @@ def get_user(id):
     reservations = [res for res in user.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     return render_template("list_user_info.html", resources=resources, reservations=reservations)
+
+######################################################################
+# Generate RSS for a resource
+######################################################################
+@app.route('/resources/<int:id>/rss', methods=['GET'])
+@login_required
+def generate_rss(id):
+    resource = Resource.query.get(id)
+    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations.sort(key=lambda x: x.start_time)
+    name = "All reservations for {}".format(resource.name)
+    feed = AtomFeed(name, feed_url=request.url,
+                    url=request.host_url, author="JX")
+    for res in reservations:
+        url = request.host_url + "reservations/" + str(res.id)
+        feed.add("Reservation id, " + str(res.id),
+                 content_type='html',
+                 updated=datetime.now(),
+                 id=res.id,
+                 url=url
+                 )
+    return feed.get_response()
 
 ######################################################################
 #  H E L P E R  F U N C T I O N S
