@@ -9,7 +9,6 @@
 </div>
 {% endif %}
 <form method="POST" enctype="multipart/form-data">
-
   <div class="form-horizontal">
     <div class="form-group">
       <div class = "control-label col-md-2">
@@ -19,7 +18,6 @@
         <input type="text" name="date" id="date" class="form-control"/>
       </div>
     </div>
-
     <div class="form-group">
       <div class = "control-label col-md-2">
         <label for="start">Start</label>
@@ -28,7 +26,6 @@
         <input type="text" name="start" id="start" class="form-control time"/>
       </div>
     </div>
-
     <div class="form-group">
       <div class = "control-label col-md-2">
         <label for="duration">Duration</label>
@@ -38,7 +35,6 @@
       </div>
     </div>
   </div>
-
   <div class="text-center">
     <button type="submit" class="btn btn-success">Save</button>
   </div>
@@ -49,13 +45,11 @@
           'showDuration': true,
           'timeFormat': 'H:i'
         });
-
         $('#date').datepicker({
           'format': 'yyyy-m-d',
           'autoclose': true
         });
     });
 </script>
-
 {% endblock %}
 {# [END form] #}
