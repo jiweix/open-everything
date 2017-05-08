@@ -56,7 +56,7 @@ def page_not_found(e):
 ######################################################################
 # Register a user
 ######################################################################
-@app.route('/register' , methods=['GET','POST'])
+@app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'GET':
         print "register template"
@@ -81,7 +81,7 @@ def register():
 ######################################################################
 # Login a user
 ######################################################################
-@app.route('/login',methods=['GET','POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'GET':
         if current_user.is_authenticated:
@@ -110,7 +110,7 @@ def login():
 ######################################################################
 # Log out a user
 ######################################################################
-@app.route('/logout',methods=['GET'])
+@app.route('/logout', methods=['GET'])
 @login_required
 def logout():
     user = current_user
@@ -349,7 +349,7 @@ def get_res_for_resource_json(id):
 @login_required
 def delete_res(id):
     reservation = Reservation.query.get(id)
-    if reservation:
+    if reservation and reservation.user_id == current_user.id:
         db.session.delete(reservation)
         db.session.commit()
     return redirect(url_for('.list'))
