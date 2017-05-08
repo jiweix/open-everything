@@ -173,6 +173,7 @@ def add_resource():
         tag = Tag.query.filter_by(value=tag_name.lower()).first()
         if not tag:
             tag = Tag(tag_name.lower())
+            db.session.add(tag)
         resource.tags.append(tag)
     db.session.add(resource)
     db.session.commit()
