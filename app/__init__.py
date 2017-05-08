@@ -34,5 +34,6 @@ def get_app(option):
     app.config['LOGGING_LEVEL'] = logging.INFO
     db.init_app(app)
     app.app_context().push()
-    db.create_all()
+    with app.app_context():
+        db.create_all()
     return app
