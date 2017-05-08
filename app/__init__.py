@@ -33,6 +33,6 @@ def get_app(option):
     app.config['SECRET_KEY'] = 'please, tell nobody... Shhhh'
     app.config['LOGGING_LEVEL'] = logging.INFO
     db.init_app(app)
-    with app.app_context():
-        db.create_all()
+    app.app_context().push()
+    db.create_all()
     return app
