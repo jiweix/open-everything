@@ -14,32 +14,12 @@
 # limitations under the License.
 ######################################################################
 import os
-import logging
-from app.models import db
-from app import app, server
-import pymysql
+import app
 
 debug = (os.getenv('DEBUG', 'False') == 'True')
 port = os.getenv('PORT', '8080')
 
-# app configuration
-if 'DATABASE_URL' in os.environ:
-    # setup database for heroku
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-else:
-    # use local db if develop locally
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'please, tell nobody... Shhhh'
-app.config['LOGGING_LEVEL'] = logging.INFO
-
-debug = (os.getenv('DEBUG', 'False') == 'True')
-port = os.getenv('PORT', '8080')
-
-db.init_app(app)
-with app.app_context():
-    db.create_all()
+app = app.get_app("")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(port), debug=debug)

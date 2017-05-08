@@ -15,6 +15,7 @@
 ######################################################################
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from . import bcrypt
 
 db = SQLAlchemy()
 
@@ -149,9 +150,9 @@ class User(db.Model):
     resources = db.relationship('Resource', backref='user',
                                 lazy='dynamic')
 
-    def __init__(self, email, passhash):
+    def __init__(self, email, password):
         self.email = email
-        self.passhash = passhash
+        self.passhash = bcrypt.generate_password_hash(password)
 
     def is_active(self):
         return True
@@ -164,3 +165,6 @@ class User(db.Model):
 
     def is_authenticated(self):
         return self.authenticated
+
+    def is_correct_pw(self, password):
+        return bcrypt.check_password_hash(self.passhash, password)

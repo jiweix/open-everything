@@ -20,7 +20,7 @@ from werkzeug.contrib.atom import AtomFeed
 from werkzeug.exceptions import NotFound
 from datetime import datetime, timedelta
 from models import db, Resource, User, Reservation, Tag
-from . import app, login_manager, bcrypt
+from . import app, login_manager
 
 # --------------------- App configuration ---------------------------
 @login_manager.user_loader
@@ -72,7 +72,7 @@ def register():
             'login.html',
             message="Please Register, Email already taken",
             button="Register")
-    user = User(data['email'] , bcrypt.generate_password_hash(data['password']))
+    user = User(data['email'] , data['password'])
     db.session.add(user)
     db.session.commit()
     print 'User successfully registered'
@@ -93,9 +93,13 @@ def login():
             index_page=True)
     data = request.form.to_dict(flat=True)
     user = User.query.filter_by(email=data['email']).first()
-    if user is None or not bcrypt.check_password_hash(user.passhash, data['password']):
+    if user is None or not user.is_correct_pw(data['password']):
         print 'Username or Password is invalid'
-        return redirect(url_for('login'))
+        return render_template(
+            'login.html',
+            message="User name or password invalid, Please try again",
+            button="Login",
+            index_page=True)
     user.authenticated = True
     db.session.add(user)
     db.session.commit()
