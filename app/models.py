@@ -82,6 +82,7 @@ class Reservation(db.Model):
     # duration should be calculate from these column
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
+    create_time = db.Column(db.DateTime)
     duration = db.Column(db.String(5))
 
     def deserialize(self, data):
@@ -92,6 +93,7 @@ class Reservation(db.Model):
             self.start_time = data['start_time']
             self.end_time = data['end_time']
             self.duration = data['duration']
+            self.create_time = datetime.now()
         except KeyError as e:
             raise KeyError('Invalid reservation: missing ' + e.args[0])
         except ValueError as e:
