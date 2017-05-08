@@ -54,15 +54,6 @@ class Resource(db.Model):
     reservations = db.relationship('Reservation', backref='resource',
                                 lazy='dynamic')
 
-    def serialize(self):
-        return { "id": self.id,
-                 "name": self.name,
-                 "owner_id": self.owner_id,
-                 "available_start": self.available_start,
-                 "available_end": self.available_end,
-                 "last_reserve_time": self.last_reserve_time
-                }
-
     def deserialize(self, data):
         try:
             self.name = data['name']
@@ -72,8 +63,8 @@ class Resource(db.Model):
             self.last_reserve_time = datetime.now()
         except KeyError as e:
             raise KeyError('Invalid resource: missing ' + e.args[0])
-        except TypeError as e:
-            raise TypeError('Invalid resource: body of request contained bad or no data')
+        except ValueError as e:
+            raise ValueError('Invalid resource: body of request contained bad or no data')
         return self
 
 
@@ -93,16 +84,6 @@ class Reservation(db.Model):
     end_time = db.Column(db.DateTime)
     duration = db.Column(db.String(5))
 
-    def serialize(self):
-        return { "id": self.id,
-                 "resource_id": self.resource_id,
-                 "resource_name": self.resource_name,
-                 "user_id": self.user_id,
-                 "start_time": self.start_time,
-                 "end_time": self.end_time,
-                 "duration": self.duration
-                }
-
     def deserialize(self, data):
         try:
             self.resource_id = int(data['resource_id'])
@@ -113,8 +94,8 @@ class Reservation(db.Model):
             self.duration = data['duration']
         except KeyError as e:
             raise KeyError('Invalid reservation: missing ' + e.args[0])
-        except TypeError as e:
-            raise TypeError('Invalid reservation: body of request contained bad or no data')
+        except ValueError as e:
+            raise ValueError('Invalid reservation: body of request contained bad or no data')
         return self
 
 
