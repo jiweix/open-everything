@@ -18,5 +18,5 @@ open the link for Demo, register a user account, and start sharing or reserving.
  
     $ nosetests
     
-## For more information about prpject design
+## For more information about project design
 please visite the [wiki page](https://github.com/jiweix/open-everything/wiki) 
