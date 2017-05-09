@@ -21,7 +21,10 @@ def get_app(option):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/test.db'
     else:
     # app configuration
-        if 'DATABASE_URL' in os.environ:
+        if 'POSTGRESQL' in os.environ:
+            print "Using postgresql"
+            app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['POSTGRESQL']
+        elif 'DATABASE_URL' in os.environ:
             # setup database for heroku
             print "Using Production DB"
             app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
