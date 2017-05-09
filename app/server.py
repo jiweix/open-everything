@@ -42,14 +42,14 @@ def page_not_found(e):
     return render_template(
         '404.html',
         code=404,
-        index_page=not current_user.is_authenticated)
+        index_page=not current_user.is_authenticated), 404
 
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template(
         '404.html',
         code=500,
-        index_page=not current_user.is_authenticated)
+        index_page=not current_user.is_authenticated), 500
 # --------------------- End of App configuration ---------------------
 
 # --------------------- User management ------------------------------
