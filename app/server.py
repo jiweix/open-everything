@@ -25,7 +25,7 @@ from . import app, login_manager
 # --------------------- App configuration ---------------------------
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.filter(User.id == int(user_id)).first()
+    return db.session.query(User).filter(User.id == int(user_id)).first()
 
 @app.before_request
 def make_session_permanent():
@@ -38,7 +38,6 @@ def unauthorized():
 
 @app.errorhandler(404)
 def page_not_found(e):
-
     return render_template(
         '404.html',
         code=404,
@@ -66,7 +65,7 @@ def register():
             button="Register",
             index_page=True)
     data = request.form.to_dict(flat=True)
-    user = User.query.filter_by(email=data['email']).first()
+    user = db.session.query(User).filter_by(email=data['email']).first()
     if user is not None:
         return render_template(
             'login.html',
@@ -92,7 +91,7 @@ def login():
             button="Login",
             index_page=True)
     data = request.form.to_dict(flat=True)
-    user = User.query.filter_by(email=data['email']).first()
+    user = db.session.query(User).filter_by(email=data['email']).first()
     if user is None or not user.is_correct_pw(data['password']):
         print 'Username or Password is invalid'
         return render_template(
@@ -144,7 +143,7 @@ def list():
     (3) resources that the user owns, each linked to its URL
     (4) a link to create a new resource
     '''
-    resources = [res for res in Resource.query.all()]
+    resources = [res for res in db.session.query(Resource).all()]
     resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
     user = current_user
     my_reservation = [res for res in user.reservations if res.end_time > datetime.now()]
@@ -170,7 +169,7 @@ def add_resource():
     resource.deserialize(data)
     tag_list = data['tag'].split()
     for tag_name in tag_list:
-        tag = Tag.query.filter_by(value=tag_name.lower()).first()
+        tag = db.session.query(Tag).filter_by(value=tag_name.lower()).first()
         if not tag:
             tag = Tag(tag_name.lower())
             db.session.add(tag)
@@ -185,7 +184,7 @@ def add_resource():
 @app.route('/resources/<int:id>', methods=['GET'])
 @login_required
 def get_resources(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     if not resource:
         raise NotFound("resource with id '{}' was not found.".format(id))
     owner = current_user.id == resource.owner_id
@@ -197,7 +196,7 @@ def get_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
 def edit_resources(id):
-    resource = Resource.query.get_or_404(id)
+    resource = db.session.query(Resource).get_or_404(id)
     tag_str = ''
     for tag in resource.tags:
         tag_str += tag.value + " "
@@ -213,7 +212,7 @@ def edit_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['POST'])
 @login_required
 def update_resources(id):
-    resource = Resource.query.get_or_404(id)
+    resource = db.session.query(Resource).get_or_404(id)
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     print data
@@ -225,7 +224,7 @@ def update_resources(id):
     # update tags
     tag_list = data['tag'].split()
     for tag_name in tag_list:
-        tag = Tag.query.filter_by(value=tag_name.lower()).first()
+        tag = db.session.query(Tag).filter_by(value=tag_name.lower()).first()
         if not tag:
             tag = Tag(tag_name.lower())
             db.session.add(tag)
@@ -241,7 +240,7 @@ def update_resources(id):
 @app.route('/resources/<int:id>/delete', methods=['GET'])
 @login_required
 def delete_resources(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     if resource is not None and resource.owner_id == current_user.id:
         for res in resource.reservations:
             db.session.delete(res)
@@ -255,7 +254,7 @@ def delete_resources(id):
 @app.route('/reservations/<int:id>', methods=['GET'])
 @login_required
 def get_res(id):
-    reservation = Reservation.query.get(id)
+    reservation = db.session.query(Reservation).get(id)
     if not reservation or reservation.end_time < datetime.now():
         raise NotFound("reservation with id '{}' was not found.".format(id))
     return render_template("view_res.html", reservation=reservation)
@@ -266,7 +265,7 @@ def get_res(id):
 @app.route('/resources/<int:id>/add_reservation', methods=['GET', 'POST'])
 @login_required
 def add_res(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
@@ -315,7 +314,7 @@ def add_res(id):
 @app.route('/resources/<int:id>/get_reservations', methods=['GET'])
 @login_required
 def get_res_for_resource(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
@@ -330,7 +329,7 @@ def get_res_for_resource(id):
 @app.route('/resources/<int:id>/get_reservations_object', methods=['GET'])
 @login_required
 def get_res_for_resource_json(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
@@ -348,7 +347,7 @@ def get_res_for_resource_json(id):
 @app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_res(id):
-    reservation = Reservation.query.get(id)
+    reservation = db.session.query(Reservation).get(id)
     if reservation and reservation.user_id == current_user.id:
         db.session.delete(reservation)
         db.session.commit()
@@ -360,7 +359,7 @@ def delete_res(id):
 @app.route('/tags/<int:id>', methods=['GET'])
 @login_required
 def get_resources_with_tag(id):
-    tag = Tag.query.get(id)
+    tag = db.session.query(Tag).get(id)
     if not tag:
         raise NotFound("tag with id '{}' was not found.".format(id))
     resources = tag.resources
@@ -372,7 +371,7 @@ def get_resources_with_tag(id):
 @app.route('/users/<int:id>', methods=['GET'])
 @login_required
 def get_user(id):
-    user = User.query.get(id)
+    user = db.session.query(User).get(id)
     if not user:
         raise NotFound("user with id '{}' was not found.".format(id))
     resources = [res for res in user.resources]
@@ -390,7 +389,7 @@ def get_user(id):
 @app.route('/resources/<int:id>/rss', methods=['GET'])
 @login_required
 def generate_rss(id):
-    resource = Resource.query.get(id)
+    resource = db.session.query(Resource).get(id)
     reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     name = "All reservations for {}".format(resource.name)
