@@ -23,6 +23,14 @@ from models import db, Resource, User, Reservation, Tag
 from . import app, login_manager
 
 # --------------------- App configuration ---------------------------
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.session.remove()
+
+@app.teardown_request
+def session_clear(exception=None):
+    db.session.remove()
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.query(User).filter(User.id == int(user_id)).first()
