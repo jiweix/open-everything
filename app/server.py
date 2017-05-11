@@ -75,7 +75,7 @@ def register():
     db.session.add(user)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     #print 'User successfully registered'
     return redirect(url_for('login'))
@@ -106,7 +106,7 @@ def login():
     db.session.add(user)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     login_user(user)
     #print 'Logged in successfully'
@@ -123,7 +123,7 @@ def logout():
     db.session.add(user)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     logout_user()
     return redirect(url_for('.login'))
@@ -190,7 +190,7 @@ def add_resource():
     db.session.add(resource)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     return redirect(url_for('.get_resources', id=resource.id))
 
@@ -251,7 +251,7 @@ def update_resources(id):
     db.session.add(resource)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     return redirect(url_for('.get_resources', id=resource.id))
 
@@ -268,7 +268,7 @@ def delete_resources(id):
         db.session.delete(resource)
         try:
             session.commit()
-        except SQLAlchemyError:
+        except:
             session.rollback()
     return redirect(url_for('.list'))
 
@@ -332,7 +332,7 @@ def add_res(id):
     db.session.add(resource)
     try:
         session.commit()
-    except SQLAlchemyError:
+    except:
         session.rollback()
     return redirect(url_for('.list'))
 
@@ -380,7 +380,7 @@ def delete_res(id):
         db.session.delete(reservation)
         try:
             session.commit()
-        except SQLAlchemyError:
+        except:
             session.rollback()
     return redirect(url_for('.list'))
 
