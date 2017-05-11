@@ -30,6 +30,8 @@ def shutdown_session(exception=None):
 @app.teardown_request
 def session_clear(exception=None):
     db.session.remove()
+    if exception:
+        db.session.rollback()
 
 @login_manager.user_loader
 def load_user(user_id):
