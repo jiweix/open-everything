@@ -58,7 +58,7 @@ def page_not_found(e):
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'GET':
-        print "register template"
+        #print "register template"
         return render_template(
             'login.html',
             message="Please Register",
@@ -74,7 +74,7 @@ def register():
     user = User(data['email'] , data['password'])
     db.session.add(user)
     db.session.commit()
-    print 'User successfully registered'
+    #print 'User successfully registered'
     return redirect(url_for('login'))
 
 ######################################################################
@@ -93,7 +93,7 @@ def login():
     data = request.form.to_dict(flat=True)
     user = db.session.query(User).filter_by(email=data['email']).first()
     if user is None or not user.is_correct_pw(data['password']):
-        print 'Username or Password is invalid'
+        #print 'Username or Password is invalid'
         return render_template(
             'login.html',
             message="User name or password invalid, Please try again",
@@ -103,7 +103,7 @@ def login():
     db.session.add(user)
     db.session.commit()
     login_user(user)
-    print 'Logged in successfully'
+    #print 'Logged in successfully'
     return redirect(url_for('.list'))
 
 ######################################################################
@@ -164,7 +164,7 @@ def add_resource():
         return render_template("form.html", action="Add", resource={}, tag="")
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
-    print data
+    #print data
     resource = Resource()
     resource.deserialize(data)
     tag_list = data['tag'].split()
@@ -188,7 +188,9 @@ def get_resources(id):
     if not resource:
         raise NotFound("resource with id '{}' was not found.".format(id))
     owner = current_user.id == resource.owner_id
-    return render_template("view.html", resource=resource, owner=owner)
+    reservations = [res for res in resource.reservations if res.end_time <= datetime.now()]
+    num_past_reservations = len(reservations)
+    return render_template("view.html", resource=resource, owner=owner, num_past=num_past_reservations)
 
 ######################################################################
 # Edit a resource (GET the edit page)
@@ -215,7 +217,7 @@ def update_resources(id):
     resource = db.session.query(Resource).get_or_404(id)
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
-    print data
+    #print data
     if resource is None or data['owner_id'] != resource.owner_id:
         return redirect(url_for('.list'))
     # edit name is not allowed.
@@ -282,15 +284,18 @@ def add_res(id):
         start = [int(x) for x in data['start'].split(':')]
         duration = [int(x) for x in data['duration'].split(':')]
         end = [start[0]+duration[0], start[1]+duration[1]]
+        if end[1] == 60:
+            end[0], end[1] = end[0] + 1, 0
         data['start_time'] = datetime(date[0], date[1], date[2], start[0], start[1])
         data['end_time'] = datetime(date[0], date[1], date[2], end[0], end[1])
-    except:
+    except Exception as e:
+        #print e.message
         return render_template(
             'form_res.html',
             action="Add",
             message="Time Input Invalid",
             reservations=reservations)
-    message = valid_res(data['start_time'], data['end_time'], resource)
+    message = valid_res(data['start_time'], data['end_time'], resource, current_user)
     if message != "":
         return render_template(
             'form_res.html',
@@ -408,7 +413,7 @@ def generate_rss(id):
 ######################################################################
 #  H E L P E R  F U N C T I O N S
 ######################################################################
-def valid_res(start, end, resource):
+def valid_res(start, end, resource, user):
     if start > end:
         return "End must later than Start"
     res_start = [int(x) for x in resource.available_start.split(':')]
@@ -422,5 +427,8 @@ def valid_res(start, end, resource):
         return "End time is after the resource available end"
     for reservation in resource.reservations:
         if reservation.end_time > start and reservation.start_time < end:
-            return "Reservation in that period"
+            return "Reservation in that period, check below"
+    for reservation in user.reservations:
+        if reservation.end_time > start and reservation.start_time < end:
+            return "You can only make one reservation at a time"
     return ""
