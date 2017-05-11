@@ -279,33 +279,31 @@ def add_res(id):
     if request.method == 'GET':
         return render_template(
             'form_res.html',
-            action="Add",
+            action="Add Reservation",
+            button="Save",
             message="",
-            reservations=reservations)
+            results=reservations)
     data = request.form.to_dict(flat=True)
     try:
-        date = [int(x) for x in data['date'].split('-')]
-        start = [int(x) for x in data['start'].split(':')]
-        duration = [int(x) for x in data['duration'].split(':')]
-        end = [start[0]+duration[0], start[1]+duration[1]]
-        if end[1] == 60:
-            end[0], end[1] = end[0] + 1, 0
-        data['start_time'] = datetime(date[0], date[1], date[2], start[0], start[1])
-        data['end_time'] = datetime(date[0], date[1], date[2], end[0], end[1])
+        data['start_time'], data['end_time'] = convert_str_to_time(data['date'], data['start'], data['duration'])
     except Exception as e:
         #print e.message
         return render_template(
             'form_res.html',
-            action="Add",
+            action="Add Reservation",
+            button="Save",
             message="Time Input Invalid",
-            reservations=reservations)
-    message = valid_res(data['start_time'], data['end_time'], resource, current_user)
+            results=reservations)
+    message = valid_res(data['start_time'], data['end_time'], resource)
+    if message == "":
+        message = valid_user_time(data['start_time'], data['end_time'], current_user)
     if message != "":
         return render_template(
             'form_res.html',
-            action="Add",
+            action="Add Reservation",
+            button="Save",
             message=message,
-            reservations=reservations)
+            results=reservations)
     data['user_id'] = current_user.id
     data['resource_id'] = id
     data['resource_name'] = resource.name
@@ -415,9 +413,53 @@ def generate_rss(id):
     return feed.get_response()
 
 ######################################################################
+# Search available resource
+######################################################################
+@app.route('/search', methods=['GET', 'POST'])
+@login_required
+def search_resource():
+    if request.method == 'GET':
+        return render_template(
+            "form_res.html",
+            action="Search Resource",
+            button="Search",
+            message="",
+            results=[])
+    data = request.form.to_dict(flat=True)
+    try:
+        start, end = convert_str_to_time(data['date'], data['start'], data['duration'])
+    except Exception as e:
+        print e.message
+        return render_template(
+            'form_res.html',
+            action="Search Resource",
+            button="Search",
+            message="Time Input Invalid",
+            results=[])
+    if valid_user_time(start, end, current_user) != "":
+        return render_template(
+            'form_res.html',
+            action="Search Resource",
+            button="Search",
+            message="You already have a reservation during that time",
+            results=[])
+    results = []
+    for res in db.session.query(Resource).all():
+        if valid_res(start, end, res) == "":
+            results.append(res)
+    return render_template(
+        'form_res.html',
+        action="Search Resource",
+        button="Search",
+        message="",
+        results=results)
+
+
+
+######################################################################
 #  H E L P E R  F U N C T I O N S
 ######################################################################
-def valid_res(start, end, resource, user):
+def valid_res(start, end, resource):
     if start > end:
         return "End must later than Start"
     res_start = [int(x) for x in resource.available_start.split(':')]
@@ -432,7 +474,21 @@ def valid_res(start, end, resource, user):
     for reservation in resource.reservations:
         if reservation.end_time > start and reservation.start_time < end:
             return "Reservation in that period, check below"
+    return ""
+
+def valid_user_time(start, end, user):
     for reservation in user.reservations:
         if reservation.end_time > start and reservation.start_time < end:
             return "You can only make one reservation at a time"
     return ""
+
+def convert_str_to_time(d, s, du):
+    date = [int(x) for x in d.split('-')]
+    start = [int(x) for x in s.split(':')]
+    duration = [int(x) for x in du.split(':')]
+    end = [start[0]+duration[0], start[1]+duration[1]]
+    if end[1] == 60:
+        end[0], end[1] = end[0] + 1, 0
+    res_s = datetime(date[0], date[1], date[2], start[0], start[1])
+    res_e = datetime(date[0], date[1], date[2], end[0], end[1])
+    return res_s, res_e

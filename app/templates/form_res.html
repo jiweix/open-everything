@@ -3,7 +3,7 @@
 
 {% block content %}
 <div>
-<h3>{{action}} Reservation</h3>
+<h3>{{action}}</h3>
 {% if message != "" %}
 <div class="alert alert-danger" role="alert">
   <strong>{{message}}</strong>
@@ -37,26 +37,50 @@
     </div>
   </div>
   <div class="text-center">
-    <button type="submit" class="btn btn-success">Save</button>
+    <button type="submit" class="btn btn-success">{{button}}</button>
   </div>
 </form>
 </div>
 <div>
-  <h4>Upcoming reservation time</h4>
-  {% for res in reservations %}
-  <div class="row text-center">
-    <div class="col-md-1"></div>
-    <div class="col-md-3">
-      {{res.start_time.strftime("%Y-%m-%d")}}
+  {% if button == "Save" %}
+    <h4>Upcoming reservation time</h4>
+    {% for res in results %}
+    <div class="row text-center">
+      <div class="col-md-1"></div>
+      <div class="col-md-3">
+        {{res.start_time.strftime("%Y-%m-%d")}}
+      </div>
+      <div class="col-md-3">
+        From {{res.start_time.strftime("%H:%M")}}
+      </div>
+      <div class="col-md-3">
+        To {{res.end_time.strftime("%H:%M")}}
+      </div>
     </div>
-    <div class="col-md-3">
-      From {{res.start_time.strftime("%H:%M")}}
+    {% endfor %}
+  {% else %}
+    {% if results != [] %}
+      <h4>Available Resources</h4>
+    {% else %}
+      <h4>No Resource Available</h4>
+    {% endif %}
+    {% for resource in results %}
+    <div class="row text-center">
+      <div class="col-md-1"></div>
+      <div class="col-md-3">
+        <a href="/resources/{{resource.id}}">
+            <h4>{{resource.name}}</h4>
+        </a>
+      </div>
+      <div class="col-md-3">
+        From {{resource.available_start}}
+      </div>
+      <div class="col-md-3">
+        To {{resource.available_end}}
+      </div>
     </div>
-    <div class="col-md-3">
-      To {{res.end_time.strftime("%H:%M")}}
-    </div>
-  </div>
   {% endfor %}
+  {% endif %}
 </div>
 <script>
     $(function() {

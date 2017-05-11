@@ -18,22 +18,18 @@ from models import db
 def get_app(option):
     app.config['LOGGING_LEVEL'] = logging.INFO
     if option == "TEST":
-        print "Using Test DB"
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/test.db'
     else:
     # app configuration
         if 'CLEARDB_DATABASE_URL' in os.environ:
             # setup database for heroku
-            print "Using ClearDB"
             app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql" + os.environ['CLEARDB_DATABASE_URL'].split("?")[0][5:]
         elif 'HEROKU_POSTGRESQL_CYAN_URL' in os.environ:
-            print "Using postgresql"
+            # Support of postgresql was added to test a bug in a middleware.
             app.config['SQLALCHEMY_DATABASE_URI'] = "postgres+psycopg2" + os.environ['HEROKU_POSTGRESQL_CYAN_URL'][8:]
         else:
             # use local db if develop locally
-            print "Using Local DB"
-            app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://bddf1e1446f428:ba186892@us-cdbr-iron-east-03.cleardb.net/heroku_91361d161d03a78"
-            # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'please, tell nobody... Shhhh'
     db.init_app(app)
