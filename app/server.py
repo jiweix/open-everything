@@ -74,9 +74,9 @@ def register():
     user = User(data['email'] , data['password'])
     db.session.add(user)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     #print 'User successfully registered'
     return redirect(url_for('login'))
 
@@ -105,9 +105,9 @@ def login():
     user.authenticated = True
     db.session.add(user)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     login_user(user)
     #print 'Logged in successfully'
     return redirect(url_for('.list'))
@@ -122,9 +122,9 @@ def logout():
     user.authenticated = False
     db.session.add(user)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     logout_user()
     return redirect(url_for('.login'))
 # --------------------- End of User management -----------------------
@@ -189,9 +189,9 @@ def add_resource():
         resource.tags.append(tag)
     db.session.add(resource)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     return redirect(url_for('.get_resources', id=resource.id))
 
 ######################################################################
@@ -250,9 +250,9 @@ def update_resources(id):
             resource.tags.append(tag)
     db.session.add(resource)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     return redirect(url_for('.get_resources', id=resource.id))
 
 ######################################################################
@@ -267,9 +267,9 @@ def delete_resources(id):
             db.session.delete(res)
         db.session.delete(resource)
         try:
-            session.commit()
+            db.session.commit()
         except:
-            session.rollback()
+            db.session.rollback()
     return redirect(url_for('.list'))
 
 ######################################################################
@@ -331,9 +331,9 @@ def add_res(id):
     db.session.add(reservation)
     db.session.add(resource)
     try:
-        session.commit()
+        db.session.commit()
     except:
-        session.rollback()
+        db.session.rollback()
     return redirect(url_for('.list'))
 
 ######################################################################
@@ -379,9 +379,9 @@ def delete_res(id):
     if reservation and reservation.user_id == current_user.id:
         db.session.delete(reservation)
         try:
-            session.commit()
+            db.session.commit()
         except:
-            session.rollback()
+            db.session.rollback()
     return redirect(url_for('.list'))
 
 ######################################################################
