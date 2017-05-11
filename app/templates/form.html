@@ -5,6 +5,11 @@
 <div>
 <h3>{{action}} resource</h3>
 <hr />
+{% if message != "" %}
+<div class="alert alert-danger" role="alert">
+  <strong>{{message}}</strong>
+</div>
+{% endif %}
 <form method="POST" enctype="multipart/form-data">
   <div class="form-horizontal">
     <div class="form-group">

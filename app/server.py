@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-import flask
+import flask, re
 from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
 from flask_login import login_required, login_user, current_user, logout_user
 from werkzeug.contrib.atom import AtomFeed
@@ -161,10 +161,14 @@ def list():
 @login_required
 def add_resource():
     if request.method == 'GET':
-        return render_template("form.html", action="Add", resource={}, tag="")
+        return render_template("form.html", action="Add", resource={}, tag="", message="")
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     #print data
+    if not re.match(r'\d{2}:\d{2}', data['available_start']) \
+        or not re.match(r'\d{2}:\d{2}', data['available_end']) \
+        or len(data['name']) == 0:
+        return render_template("form.html", action="Add", resource={}, tag="", message="Input Invalid")
     resource = Resource()
     resource.deserialize(data)
     tag_list = data['tag'].split()
