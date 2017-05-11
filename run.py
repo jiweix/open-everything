@@ -19,7 +19,6 @@ import app
 debug = (os.getenv('DEBUG', 'False') == 'True')
 port = os.getenv('PORT', '8080')
 
-app = app.get_app("")
-
 if __name__ == '__main__':
+    app = app.get_app("")
     app.run(host='0.0.0.0', port=int(port), debug=debug)
