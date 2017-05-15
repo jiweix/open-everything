@@ -28,8 +28,10 @@ class Tag_Resource(db.Model):
     resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
     tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
 
-    resource = db.relationship("Resource", backref=db.backref("tag_resource", cascade="all, delete-orphan"))
-    tag = db.relationship("Tag", backref=db.backref("tag_resource", cascade="all, delete-orphan"))
+    resource = db.relationship("Resource",
+            backref=db.backref("tag_resource", cascade="all, delete-orphan"))
+    tag = db.relationship("Tag",
+            backref=db.backref("tag_resource", cascade="all, delete-orphan"))
 
     def __init__(self, resource_id, tag_id):
         self.resource_id = resource_id
@@ -111,7 +113,8 @@ class Tag(db.Model):
     # lower case letters
     value = db.Column(db.String(20))
 
-    resources = db.relationship('Resource', secondary="tag_resource", lazy='dynamic')
+    resources = db.relationship('Resource', secondary="tag_resource",
+                                lazy='dynamic')
 
     def __init__(self, value):
         self.value = value

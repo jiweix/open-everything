@@ -14,7 +14,8 @@
 # limitations under the License.
 ######################################################################
 import flask, re
-from flask import Response, redirect, jsonify, request, json, url_for, make_response, render_template, g
+from flask import redirect, jsonify, request, json, url_for, make_response, \
+    render_template
 from flask_login import login_required, login_user, current_user, logout_user
 from werkzeug.contrib.atom import AtomFeed
 from werkzeug.exceptions import NotFound
@@ -27,6 +28,11 @@ from . import app, login_manager
 def shutdown_session(exception=None):
     db.session.remove()
 
+@app.before_request
+def make_session_permanent():
+    flask.session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
+
 @app.teardown_request
 def session_clear(exception=None):
     db.session.remove()
@@ -36,11 +42,6 @@ def session_clear(exception=None):
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.query(User).filter(User.id == int(user_id)).first()
-
-@app.before_request
-def make_session_permanent():
-    flask.session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=10)
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -157,15 +158,18 @@ def list():
     '''
     the landing page,
     viewers will see three sections:
-    (1) reservations made for resources by that user, sorted by reservation time;
-    (2) all resources in the system, shown in reverse time order based on last made reservation;
+    (1) reservations made for resources by that user,
+        sorted by reservation time;
+    (2) all resources in the system,
+        shown in reverse time order based on last made reservation;
     (3) resources that the user owns, each linked to its URL
     (4) a link to create a new resource
     '''
     resources = [res for res in db.session.query(Resource).all()]
     resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
     user = current_user
-    my_reservation = [res for res in user.reservations if res.end_time > datetime.now()]
+    my_reservation = \
+        [res for res in user.reservations if res.end_time > datetime.now()]
     my_reservation.sort(key=lambda x: x.start_time)
     return render_template(
         "list.html",
@@ -180,14 +184,24 @@ def list():
 @login_required
 def add_resource():
     if request.method == 'GET':
-        return render_template("form.html", action="Add", resource={}, tag="", message="")
+        return render_template(
+            "form.html",
+            action="Add",
+            resource={},
+            tag="",
+            message="")
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     #print data
     if not re.match(r'\d{2}:\d{2}', data['available_start']) \
         or not re.match(r'\d{2}:\d{2}', data['available_end']) \
         or len(data['name']) == 0:
-        return render_template("form.html", action="Add", resource={}, tag="", message="Input Invalid")
+        return render_template(
+            "form.html",
+            action="Add",
+            resource={},
+            tag="",
+            message="Input Invalid")
     resource = Resource()
     resource.deserialize(data)
     tag_list = data['tag'].split()
@@ -214,9 +228,14 @@ def get_resources(id):
     if not resource:
         raise NotFound("resource with id '{}' was not found.".format(id))
     owner = current_user.id == resource.owner_id
-    reservations = [res for res in resource.reservations if res.end_time <= datetime.now()]
+    reservations = \
+        [res for res in resource.reservations if res.end_time <= datetime.now()]
     num_past_reservations = len(reservations)
-    return render_template("view.html", resource=resource, owner=owner, num_past=num_past_reservations)
+    return render_template(
+        "view.html",
+        resource=resource,
+        owner=owner,
+        num_past=num_past_reservations)
 
 ######################################################################
 # Edit a resource (GET the edit page)
@@ -302,7 +321,8 @@ def add_res(id):
     resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
-    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations = \
+        [res for res in resource.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     if request.method == 'GET':
         return render_template(
@@ -313,7 +333,8 @@ def add_res(id):
             results=reservations)
     data = request.form.to_dict(flat=True)
     try:
-        data['start_time'], data['end_time'] = convert_str_to_time(data['date'], data['start'], data['duration'])
+        data['start_time'], data['end_time'] = \
+            convert_str_to_time(data['date'], data['start'], data['duration'])
     except Exception as e:
         #print e.message
         return render_template(
@@ -324,7 +345,8 @@ def add_res(id):
             results=reservations)
     message = valid_res(data['start_time'], data['end_time'], resource)
     if message == "":
-        message = valid_user_time(data['start_time'], data['end_time'], current_user)
+        message = \
+            valid_user_time(data['start_time'], data['end_time'], current_user)
     if message != "":
         return render_template(
             'form_res.html',
@@ -355,7 +377,8 @@ def get_res_for_resource(id):
     resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
-    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations = \
+        [res for res in resource.reservations if res.end_time > datetime.now()]
     return render_template(
         "list_res.html",
         reservations=reservations,
@@ -370,7 +393,8 @@ def get_res_for_resource_json(id):
     resource = db.session.query(Resource).get(id)
     if resource is None:
         raise NotFound("resource with id '{}' was not found.".format(id))
-    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations = \
+        [res for res in resource.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     results = []
     for res in reservations:
@@ -404,7 +428,10 @@ def get_resources_with_tag(id):
     if not tag:
         raise NotFound("tag with id '{}' was not found.".format(id))
     resources = tag.resources
-    return render_template("list_tag_resource.html", resources=resources, tag=tag)
+    return render_template(
+        "list_tag_resource.html",
+        resources=resources,
+        tag=tag)
 
 ######################################################################
 # Get a user's info (reservation, resources)
@@ -417,7 +444,8 @@ def get_user(id):
         raise NotFound("user with id '{}' was not found.".format(id))
     resources = [res for res in user.resources]
     resources.sort(key=lambda x: x.last_reserve_time, reverse=True)
-    reservations = [res for res in user.reservations if res.end_time > datetime.now()]
+    reservations = \
+        [res for res in user.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     return render_template(
         "list_user_info.html",
@@ -431,7 +459,8 @@ def get_user(id):
 @login_required
 def generate_rss(id):
     resource = db.session.query(Resource).get(id)
-    reservations = [res for res in resource.reservations if res.end_time > datetime.now()]
+    reservations = \
+        [res for res in resource.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
     name = "All reservations for {}".format(resource.name)
     feed = AtomFeed(name, feed_url=request.url,
@@ -461,7 +490,8 @@ def search_resource():
             results=[])
     data = request.form.to_dict(flat=True)
     try:
-        start, end = convert_str_to_time(data['date'], data['start'], data['duration'])
+        start, end = \
+            convert_str_to_time(data['date'], data['start'], data['duration'])
     except Exception as e:
         print e.message
         return render_template(
@@ -500,10 +530,11 @@ def valid_res(start, end, resource):
     res_end = [int(x) for x in resource.available_end.split(':')]
     if start < datetime.now():
         return "Start time can't be in the past"
-    if start.hour < res_start[0] or \
-        (start.hour == res_start[0] and start.minute < res_start[1]):
+    if (start.hour < res_start[0] or \
+        (start.hour == res_start[0] and start.minute < res_start[1])):
         return "Start time is before the resource available start"
-    if end.hour > res_end[0] or (end.hour == res_end[0] and end.minute > res_end[1]):
+    if (end.hour > res_end[0] or \
+        (end.hour == res_end[0] and end.minute > res_end[1])):
         return "End time is after the resource available end"
     for reservation in resource.reservations:
         if reservation.end_time > start and reservation.start_time < end:
