@@ -1,6 +1,6 @@
 # open-everything
 
-[![Build Status](https://travis-ci.org/jiweix/open-everything.svg?branch=master)](https://travis-ci.org/jiweix/open-everything) 
+[![Build Status](https://travis-ci.org/jiweix/open-everything.svg?branch=master)](https://travis-ci.org/jiweix/open-everything) [![codecov](https://codecov.io/gh/jiweix/open-everything/branch/master/graph/badge.svg)](https://codecov.io/gh/jiweix/open-everything)
 
 This is a repo for creating a resource sharing platform. User can share a resource or reserver a resource.   
 Only registered user are allowed.  
