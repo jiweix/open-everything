@@ -243,7 +243,9 @@ def get_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['GET'])
 @login_required
 def edit_resources(id):
-    resource = db.session.query(Resource).get_or_404(id)
+    resource = db.session.query(Resource).get(id)
+    if not resource:
+        raise NotFound("resource with id '{}' was not found.".format(id))
     tag_str = ''
     for tag in resource.tags:
         tag_str += tag.value + " "
@@ -259,7 +261,9 @@ def edit_resources(id):
 @app.route('/resources/<int:id>/edit', methods=['POST'])
 @login_required
 def update_resources(id):
-    resource = db.session.query(Resource).get_or_404(id)
+    resource = db.session.query(Resource).get(id)
+    if not resource:
+        raise NotFound("resource with id '{}' was not found.".format(id))
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     #print data
