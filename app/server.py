@@ -403,25 +403,6 @@ def get_res_for_resource(id):
         resource=resource)
 
 ######################################################################
-# Get json reservations for one resource for calendar
-######################################################################
-@app.route('/resources/<int:id>/get_reservations_object', methods=['GET'])
-@login_required
-def get_res_for_resource_json(id):
-    resource = db.session.query(Resource).get(id)
-    if resource is None:
-        raise NotFound("resource with id '{}' was not found.".format(id))
-    reservations = \
-        [res for res in resource.reservations if res.end_time > datetime.now()]
-    reservations.sort(key=lambda x: x.start_time)
-    results = []
-    for res in reservations:
-        results.append({"title" : res.id,
-                        "start" : res.start_time.strftime("%Y-%m-%dT%H:%M:%S"),
-                        "end" : res.end_time.strftime("%Y-%m-%dT%H:%M:%S")})
-    return make_response(jsonify(results), 200)
-
-######################################################################
 # Delete a reservation
 ######################################################################
 @app.route('/reservations/<int:id>/delete', methods=['GET', 'POST'])
@@ -477,6 +458,8 @@ def get_user(id):
 @login_required
 def generate_rss(id):
     resource = db.session.query(Resource).get(id)
+    if not resource:
+        raise NotFound("resource with id '{}' was not found.".format(id))
     reservations = \
         [res for res in resource.reservations if res.end_time > datetime.now()]
     reservations.sort(key=lambda x: x.start_time)
@@ -584,7 +567,6 @@ def valid_resource_time(start, end):
     end_arr = [int(x) for x in end.split(':')]
     start_temp = datetime(2017, 5, 21, start_arr[0], start_arr[1])
     end_temp = datetime(2017, 5, 21, end_arr[0], end_arr[1])
-    print start_temp, end_temp
     if start_temp >= end_temp:
         return "Start time should be before End time"
     return ""

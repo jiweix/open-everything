@@ -39,6 +39,16 @@ class TestModels(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, url_for('list'))
 
+    def test_user_can_logout(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/logout')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, url_for('login'))
+        response = self.client.get('/home')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("You need to log in" in response.data)
+
     def test_invalid_user_can_not_login(self):
         response = self.client.post('/login',
                                     data={ 'email': "a@a.com",
@@ -63,6 +73,19 @@ class TestModels(unittest.TestCase):
                                     data=self.user_data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue("Email already taken" in response.data)
+
+    def test_retrieve_user_by_user_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/users/'+str(self.test_user_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("test_res" in response.data)
+
+    def test_retrieve_user_by_invalid_user_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/users/'+str(99999))
+        self.assertEqual(response.status_code, 404)
     # ----------------------End User tests -------------------------------------
 
     # ----------------------Home page tests ------------------------------------
@@ -78,6 +101,19 @@ class TestModels(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue("You need to log in" in response.data)
     # ----------------------End Home page tests --------------------------------
+
+    # ----------------------Index page tests -----------------------------------
+    def test_login_user_access_index_page(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, url_for('list'))
+
+    def test_anonymous_user_access_index_page(self):
+        response = self.client.get('/home')
+        self.assertEqual(response.status_code, 200)
+    # ----------------------End Index page tests -------------------------------
 
     # ----------------------Resource tests -------------------------------------
     def test_access_add_resource_page(self):
@@ -95,10 +131,35 @@ class TestModels(unittest.TestCase):
                                            'owner_id': self.test_user_id,
                                            'available_start': '01:00',
                                            'available_end': '23:00',
-                                           'tag': ''},
+                                           'tag': 'test a b'},
                                     follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertTrue("resource_2" in response.data)
+
+    def test_add_new_resource_end_before_start(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/add',
+                                    data={ 'name': 'resource_2',
+                                           'owner_id': self.test_user_id,
+                                           'available_start': '10:00',
+                                           'available_end': '9:00',
+                                           'tag': 'test a b'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Add resource" in response.data)
+        self.assertTrue("resource_2" not in response.data)
+
+    def test_add_new_resource_without_name(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/add',
+                                    data={ 'name': '',
+                                           'owner_id': self.test_user_id,
+                                           'available_start': '10:00',
+                                           'available_end': '19:00',
+                                           'tag': 'test a b'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Add resource" in response.data)
 
     def test_add_invalid_resource(self):
         self.client.post('/login',
@@ -112,7 +173,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue("Input Invalid" in response.data)
 
-    def test_retrive_resource_by_id(self):
+    def test_retrieve_resource_by_id(self):
         self.client.post('/login',
                          data=self.user_data)
         response = self.client.get('/resources/'+str(self.test_resource_id))
@@ -164,14 +225,14 @@ class TestModels(unittest.TestCase):
     # ----------------------End Resource tests ---------------------------------
 
     # ----------------------Reservation tests ----------------------------------
-    def test_retrive_reservation_by_id(self):
+    def test_retrieve_reservation_by_id(self):
         self.client.post('/login',
                          data=self.user_data)
         response = self.client.get('/reservations/'+str(self.test_reservation_id))
         self.assertEqual(response.status_code, 200)
         self.assertTrue("test_res" in response.data)
 
-    def test_retrive_reservation_by_invalid_id(self):
+    def test_retrieve_reservation_by_invalid_id(self):
         self.client.post('/login',
                          data=self.user_data)
         response = self.client.get('/reservations/'+str(9999999))
@@ -211,8 +272,129 @@ class TestModels(unittest.TestCase):
                                            'start': '0:00',
                                            'duration': '01:00'})
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("Start time is before the resource available start" in response.data)     
+        self.assertTrue("Start time is before the resource available start" in response.data)
+
+    def test_add_new_reservation_out_of_range_time_2(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/'+str(self.test_resource_id)+'/add_reservation',
+                                    data={ 'date': (datetime.now()+timedelta(days=1)).strftime('%Y-%m-%d'),
+                                           'start': '18:00',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("End time is after the resource available end" in response.data)
+
+    def test_add_new_reservation_past_time(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/'+str(self.test_resource_id)+'/add_reservation',
+                                    data={ 'date': (datetime.now()-timedelta(days=1)).strftime('%Y-%m-%d'),
+                                           'start': '10:00',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Add Reservation" in response.data)
+
+    def test_get_reservations_with_resource_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(self.test_resource_id)+'/get_reservations')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("Reservation Id: " +str(self.test_reservation_id)) in response.data)
+
+    def test_get_reservations_with_invalid_resource_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(99999)+'/get_reservations')
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_reservation(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/reservations/'+str(self.test_reservation_id)+'/delete')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, url_for('list'))
+        response = self.client.get('/reservations/'+str(self.test_reservation_id))
+        self.assertEqual(response.status_code, 404)
     # ----------------------End Reservation tests ------------------------------
+
+    # ----------------------Tag tests ------------------------------------------
+    def test_retrieve_tag_by_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/tags/'+str(self.tag_id_1))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("test_res" in response.data)
+
+    def test_retrieve_tag_by_invalid_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/tags/'+str(99999))
+        self.assertEqual(response.status_code, 404)
+    # ----------------------End Tag tests --------------------------------------
+
+    # ----------------------RSS tests ------------------------------------------
+    def test_get_RSS_by_resource_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(self.test_resource_id)+'/rss')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("All reservations for test_res") in response.data)
+
+    def test_get_RSS_by_invalid_resource_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(99999)+'/rss')
+        self.assertEqual(response.status_code, 404)
+    # ----------------------End RSS tests --------------------------------------
+
+    # ----------------------Search tests ---------------------------------------
+    def test_get_search_page(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/search')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("Search Resource") in response.data)
+
+    def test_search_resource_should_have_result(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/search',
+                                    data={ 'date': (datetime.now()+timedelta(days=2)).strftime('%Y-%m-%d'),
+                                           'start': '6:00',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("test_res") in response.data)
+
+    def test_search_resource_should_not_have_result(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/search',
+                                    data={ 'date': (datetime.now()+timedelta(days=2)).strftime('%Y-%m-%d'),
+                                           'start': '4:30',
+                                           'duration': '0:30'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("test_res") not in response.data)
+
+    def test_search_resource_invalid_input(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/search',
+                                    data={ 'date': (datetime.now()+timedelta(days=2)).strftime('%Y-%m-%d'),
+                                           'start': 'not_time',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("Time Input Invalid") in response.data)
+
+    def test_search_resource_user_has_reservation_during_that_time(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/search',
+                                    data={ 'date': datetime.now().strftime('%Y-%m-%d'),
+                                           'start': (datetime.now()+timedelta(minutes=30)).strftime('%H:%M'),
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(("You already have a reservation during that time") in response.data)
+    # ----------------------End Search tests -----------------------------------
 
     # ---------------------- SET UP --------------------------------------------
     def setup_dummy_data(self):
@@ -231,6 +413,7 @@ class TestModels(unittest.TestCase):
         db.session.add(self.tag_2)
         db.session.add(self.test_resource)
         db.session.commit()
+        self.tag_id_1 = self.tag.id
 
     def add_one_user(self):
         user = User("a@a.com", "hard_to_guess_pw")
@@ -259,8 +442,8 @@ class TestModels(unittest.TestCase):
                 'resource_name' : resource_name,
                 'user_id' : user_id,
                 'start_time' : datetime.now(),
-                'end_time': datetime.now() + timedelta(minutes=30),
-                'duration': '00:30'
+                'end_time': datetime.now() + timedelta(minutes=90),
+                'duration': '01:30'
                 })
         db.session.add(reservation)
         db.session.commit()
