@@ -274,6 +274,7 @@ def update_resources(id):
     resource.deserialize(data)
     # update tags
     tag_list = data['tag'].split()
+    resource.tags = []
     for tag_name in tag_list:
         tag = db.session.query(Tag).filter_by(value=tag_name.lower()).first()
         if not tag:
