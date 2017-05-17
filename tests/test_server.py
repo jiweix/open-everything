@@ -152,8 +152,67 @@ class TestModels(unittest.TestCase):
                                            'tag': 'test_tag' })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, url_for('list'))
+
+    def test_delete_resource(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(self.test_resource_id)+'/delete')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, url_for('list'))
+        response = self.client.get('/resources/'+str(self.test_resource_id))
+        self.assertEqual(response.status_code, 404)
     # ----------------------End Resource tests ---------------------------------
 
+    # ----------------------Reservation tests ----------------------------------
+    def test_retrive_reservation_by_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/reservations/'+str(self.test_reservation_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("test_res" in response.data)
+
+    def test_retrive_reservation_by_invalid_id(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/reservations/'+str(9999999))
+        self.assertEqual(response.status_code, 404)
+
+    def test_access_add_reservation_page(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.get('/resources/'+str(self.test_resource_id)+'/add_reservation')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Add Reservation" in response.data)
+
+    def test_add_new_reservation(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/'+str(self.test_resource_id)+'/add_reservation',
+                                    data={ 'date': (datetime.now()+timedelta(days=1)).strftime('%Y-%m-%d'),
+                                           'start': '10:00',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 302)
+
+    def test_add_new_reservation_invalid_time(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/'+str(self.test_resource_id)+'/add_reservation',
+                                    data={ 'date': (datetime.now()+timedelta(days=1)).strftime('%Y-%m-%d'),
+                                           'start': 'not_time',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Time Input Invalid" in response.data)
+
+    def test_add_new_reservation_out_of_range_time(self):
+        self.client.post('/login',
+                         data=self.user_data)
+        response = self.client.post('/resources/'+str(self.test_resource_id)+'/add_reservation',
+                                    data={ 'date': (datetime.now()+timedelta(days=1)).strftime('%Y-%m-%d'),
+                                           'start': '0:00',
+                                           'duration': '01:00'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue("Start time is before the resource available start" in response.data)     
+    # ----------------------End Reservation tests ------------------------------
 
     # ---------------------- SET UP --------------------------------------------
     def setup_dummy_data(self):

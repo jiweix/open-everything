@@ -193,15 +193,16 @@ def add_resource():
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
     #print data
-    if not re.match(r'\d{2}:\d{2}', data['available_start']) \
-        or not re.match(r'\d{2}:\d{2}', data['available_end']) \
-        or len(data['name']) == 0:
+    message = valid_resource_time(data['available_start'], data['available_end'])
+    if len(data['name']) == 0:
+        message = "name can't be empty"
+    if message != "":
         return render_template(
             "form.html",
             action="Add",
             resource={},
             tag="",
-            message="Input Invalid")
+            message=message)
     resource = Resource()
     resource.deserialize(data)
     tag_list = data['tag'].split()
@@ -264,8 +265,20 @@ def update_resources(id):
     resource = db.session.query(Resource).get(id)
     if not resource:
         raise NotFound("resource with id '{}' was not found.".format(id))
+    tag_str = ''
+    for tag in resource.tags:
+        tag_str += tag.value + " "
     data = request.form.to_dict(flat=True)
     data['owner_id'] = current_user.id
+    message = valid_resource_time(data['available_start'], data['available_end'])
+    print message
+    if message != "":
+        return render_template(
+            "form.html",
+            action="Edit",
+            resource=resource,
+            tag=tag_str[:-1],
+            message=message)
     #print data
     if resource is None or data['owner_id'] != resource.owner_id:
         return redirect(url_for('.list'))
@@ -562,3 +575,16 @@ def convert_str_to_time(d, s, du):
     res_s = datetime(date[0], date[1], date[2], start[0], start[1])
     res_e = datetime(date[0], date[1], date[2], end[0], end[1])
     return res_s, res_e
+
+def valid_resource_time(start, end):
+    if not re.match(r'\d{2}:\d{2}', start) \
+        or not re.match(r'\d{2}:\d{2}', end):
+        return "Input Invalid"
+    start_arr = [int(x) for x in start.split(':')]
+    end_arr = [int(x) for x in end.split(':')]
+    start_temp = datetime(2017, 5, 21, start_arr[0], start_arr[1])
+    end_temp = datetime(2017, 5, 21, end_arr[0], end_arr[1])
+    print start_temp, end_temp
+    if start_temp >= end_temp:
+        return "Start time should be before End time"
+    return ""
